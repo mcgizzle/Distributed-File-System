@@ -1,25 +1,16 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Server
     ( startApp
-    , app
     ) where
 
 import Prelude ()
@@ -31,81 +22,45 @@ import Data.Aeson.Compat
 import Data.Aeson.Types
 import Data.Attoparsec.ByteString
 import Data.ByteString (ByteString)
---import Data.List
 import Data.Maybe (fromMaybe)
---import Data.String.Conversions
---import Data.Time.Calendar
 import GHC.Generics
 import Network.HTTP.Media ((//), (/:))
 import Network.Wai
 import Network.Wai.Handler.Warp hiding (FileInfo)
 import Servant
+import Servant.Server 
 import System.Directory
 import qualified Data.Aeson.Parser
+import Control.Category     ((<<<), (>>>))
 
-import           Control.Monad.IO.Class  (liftIO)
-import           Control.Monad.Logger    (runStderrLoggingT)
-import           Database.Persist
-import           Database.Persist.Postgresql
-import           Database.Persist.TH
+import Control.Monad.IO.Class  (liftIO)
+import Control.Monad.Logger    (runStderrLoggingT)
+import Database.Persist
+import Database.Persist.Postgresql
+import Database.Persist.TH
 
-type Nodes = [Int]
+import Config
+import Models
+import Controller
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-FileInfo json
-    filename String
-    filepath String
-    UniqueFilepath filepath
-    nodes Nodes 
-    deriving Show
-|]
+type DirectoryAPI = ReqBody '[JSON] File :> Get '[JSON] FileInfo 
 
-connStr = "host=localhost dbname=test user=root password=root port=5432"
+startApp :: Config -> IO ()
+startApp cfg = run 8080 (directoryApp cfg)
 
-data File = File {
-  
-  name :: String,
-  contents :: String
+directoryApp :: Config -> Application
+directoryApp cfg = serve api (magicToServer cfg)
 
-} deriving(Generic,Show)
-instance ToJSON File
-instance FromJSON File
+magicToServer :: Config -> Server DirectoryAPI
+magicToServer cfg = enter (convertMagic cfg >>> NT Handler) directoryServer
 
-type API = ReqBody '[JSON] File :> Post '[JSON] FileInfo 
+convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
-startApp :: IO ()
-startApp = run 8080 app
+directoryServer :: MonadIO m => ServerT DirectoryAPI (MagicT m)
+directoryServer = Controller.putFile
 
-app :: Application
-app = serve api server
 
-api :: Proxy API
+api :: Proxy DirectoryAPI
 api = Proxy
 
-server :: Server API
-server = putFile
-
-putFile :: File -> Handler FileInfo
-putFile f = do
-  resp <- liftIO $ insertFile f
-  case resp of
-    Just resp' -> return resp'
-    Nothing    -> throwError errFileExists
-  where errFileExists = err404 { errBody = "This file already exists, please leave this server alone." }
-  
-  
-insertFile f = runDB query
-  where 
-    query = do 
-      resp <- insertUnique $ FileInfo fname fname [1]
-      case resp of
-        Just resp' -> get resp'
-        Nothing    -> return Nothing 
-    fname = name f
-
---runDB :: _ -> _ -> _
-runDB query = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-      flip runSqlPersistMPool pool $ do
-        runMigration migrateAll
-        query
 
