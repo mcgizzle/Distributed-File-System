@@ -11,10 +11,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Models(
-File(..),FileInfo(..),
-doMigrations,runDB
-)where
+module Models where
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
 import Data.Aeson           (FromJSON, ToJSON)
