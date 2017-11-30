@@ -1,12 +1,15 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module FileApi where
 
-import Models (File(..),FileServer(..))
+import Models (File(..),FileNode(..))
 
 import Data.Aeson
 import Data.Proxy
@@ -34,13 +37,13 @@ getFile' :<|> sendFile' = client api
 sendFile :: File -> ClientM ServerInfo
 sendFile f = sendFile' f >>= return
 
-query :: Show a => ClientM a -> FileServer -> IO ()
-query q server = do
+
+query :: Show a => ClientM a -> FileNode -> IO ()
+query q node = do
   manager' <- newManager defaultManagerSettings
-  res <- runClientM q (ClientEnv manager' (BaseUrl Http h p "")) 
+  let host = fileNodeHost node 
+  let port = fileNodePort node
+  res <- runClientM q (ClientEnv manager' (BaseUrl Http host port "")) 
   case res of
     Left err   -> print err
     Right res' -> print res'
-  where 
-    p = 8080
-    h ="localhost"
