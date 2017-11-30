@@ -1,20 +1,13 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module Config(
@@ -82,7 +75,7 @@ makePool env = do
     Production  -> runStdoutLoggingT (createPostgresqlPool s n)
 
 
-connStr = "host=localhost dbname=test user=root password=root port=5432"
+connStr = "host=localhost dbname=fs_dev user=root password=root port=5432"
 
 getConnString :: Environment -> IO ConnectionString
 getConnString _ = return connStr
