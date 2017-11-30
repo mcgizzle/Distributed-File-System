@@ -2,13 +2,13 @@
 This is the overarching repo for the the system. Each folder will contain a piece of the systems functionality. The aim is for the system to exhibit the below functionality:
 
  * Distributed Transparent File Access
-    * Currently under construction
+    * Under construction: Progress 70%
 
  * Directory Service
-    * Initial construction began
+    * Under construction: Progress 60%
   
  * Replication
-    * Not started
+    * Under Construction: Progress 80%
 
  * Security
     * Not started
