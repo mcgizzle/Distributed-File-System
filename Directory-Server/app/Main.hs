@@ -2,7 +2,7 @@ module Main where
 
 import Database.Persist.Sql (runSqlPool)
 
-import Server
+import DirectoryApi
 import Config
 import Models (doMigrations)
 
