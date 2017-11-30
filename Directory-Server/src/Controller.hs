@@ -18,6 +18,8 @@ import Servant
 
 import Models as M 
 import Config
+import FileApi
+
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
 
 listFiles :: MonadIO m => MagicT m [FileInfo]
@@ -36,9 +38,14 @@ getFileLoc path = do
     
 putFile :: MonadIO m => File -> MagicT m FileInfo
 putFile f = do
-  nodes <- sendToServers f
-  let f' = FileInfo (fileName f) (filePath f) nodes
+  servers <- getServers
+  liftIO $ mapM_ (query (sendFile f)) servers
+  let f' = FileInfo (fileName f) (filePath f) []
   runDB $ insert f'
   return f'
 
-sendToServers = undefined
+getServers :: MonadIO m => MagicT m [FileServer]
+getServers = do
+  res :: [Entity M.FileServer] <- runDB $ selectList [M.FileServerActive ==. True] []
+  return $ Prelude.map entityVal res
+
