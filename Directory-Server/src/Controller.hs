@@ -38,14 +38,17 @@ getFileLoc path = do
     
 putFile :: MonadIO m => File -> MagicT m FileInfo
 putFile f = do
-  servers <- getServers
+  (servers,keys) <- getServers
   liftIO $ mapM_ (\s -> query (sendFile f) s) servers
-  let f' = FileInfo (fileName f) (filePath f) []
-  runDB $ insert f'
-  return f'
+  let f' = FileInfo (fileName f) (filePath f) keys
+  res <- runDB $ insertUnique f'
+  case res of
+    Just _  -> return f'
+    Nothing -> throwError errFileExists
 
-getServers :: MonadIO m => MagicT m [M.FileNode]
+getServers :: MonadIO m => MagicT m ([M.FileNode],[Key M.FileNode])
 getServers = do
   res :: [Entity M.FileNode] <- runDB $ selectList [M.FileNodeActive ==. True] []
-  return $ Prelude.map entityVal res
+  return $ (Prelude.map entityVal res, Prelude.map entityKey res)
 
+errFileExists = err400 { errBody = "File with this name already exists"}
