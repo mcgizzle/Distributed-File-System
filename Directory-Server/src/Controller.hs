@@ -39,13 +39,13 @@ getFileLoc path = do
 putFile :: MonadIO m => File -> MagicT m FileInfo
 putFile f = do
   servers <- getServers
-  liftIO $ mapM_ (query (sendFile f)) servers
+  liftIO $ mapM_ (\s -> query (sendFile f) s) servers
   let f' = FileInfo (fileName f) (filePath f) []
   runDB $ insert f'
   return f'
 
-getServers :: MonadIO m => MagicT m [FileServer]
+getServers :: MonadIO m => MagicT m [M.FileNode]
 getServers = do
-  res :: [Entity M.FileServer] <- runDB $ selectList [M.FileServerActive ==. True] []
+  res :: [Entity M.FileNode] <- runDB $ selectList [M.FileNodeActive ==. True] []
   return $ Prelude.map entityVal res
 
