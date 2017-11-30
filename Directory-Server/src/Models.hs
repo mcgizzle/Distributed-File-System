@@ -32,17 +32,16 @@ instance ToJSON File
 
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-FileInfo json
-    file_name String
-    file_path String
-    nodes [Int]
-    UniqueFile_path file_path
-FileServer json
+FileNode json
     host String
     port Int
     active Bool
-    deriving Generic
-
+FileInfo json
+    file_name String
+    file_path String
+    nodes [FileNodeId]
+    UniqueFile_path file_path
+    deriving Show
 |]
 
 doMigrations :: SqlPersistT IO ()
