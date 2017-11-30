@@ -6,7 +6,6 @@
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
 
 module DirectoryApi 
@@ -27,10 +26,10 @@ import Models
 import Controller
 
 type DirectoryAPI = "ls" :> Get '[JSON] [FileInfo]
-               :<|> ReqBody '[JSON] File :> Get '[JSON] FileInfo 
+               :<|> ReqBody '[JSON] File :> Post '[JSON] FileInfo 
 
-startApp :: Config -> IO ()
-startApp cfg = run 8080 (directoryApp cfg)
+startApp :: Int -> Config -> IO ()
+startApp port cfg = run port (directoryApp cfg)
 
 directoryApp :: Config -> Application
 directoryApp cfg = serve api (magicToServer cfg)
