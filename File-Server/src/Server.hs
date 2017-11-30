@@ -36,8 +36,8 @@ import qualified Data.Aeson.Parser
 import Api
 
 
-runServer :: IO ()
-runServer = run 8080 app
+runServer :: Int -> IO ()
+runServer port = run port app
 
 app :: Application
 app = serve api server
