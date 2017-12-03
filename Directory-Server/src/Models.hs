@@ -21,6 +21,7 @@ import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
 import GHC.Generics         (Generic)
 import Config               
 import Data.Text            (Text)
+import Data.Time
 
 data File = File {
   fileName :: String,
@@ -30,7 +31,6 @@ data File = File {
 instance FromJSON File
 instance ToJSON File
 
-
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
     host String
@@ -39,8 +39,10 @@ FileNode json
 FileInfo json
     file_name String
     file_path String
+    locked Bool
+    last_write UTCTime
     nodes [FileNodeId]
-    UniqueFile_path file_path
+    UniqueFile file_path file_name
     deriving Show
 |]
 
