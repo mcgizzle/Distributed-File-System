@@ -18,6 +18,7 @@ import Data.Aeson
 data File = File {
   
   fileName :: String,
+  filePath :: String,
   fileContents :: String
 
 } deriving(Generic,Show)
@@ -35,5 +36,6 @@ instance FromJSON ServerInfo
 
 type API = Capture "path" String :> Get '[JSON] File 
       :<|> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
+      :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
 
 
