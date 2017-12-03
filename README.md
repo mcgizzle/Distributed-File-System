@@ -2,16 +2,17 @@
 This is the overarching repo for the the system. Each folder will contain a piece of the systems functionality. The aim is for the system to exhibit the below functionality:
 
  * Distributed Transparent File Access
-    * Under construction: Progress 70%
+    * Complete
 
  * Directory Service
-    * Under construction: Progress 60%
+    * Complete
   
  * Replication
     * Under Construction: Progress 80%
+    * TODO: Implement round-robin replication algorithm
 
- * Security
-    * Not started
+ * Locking
+    * Under construction
   
- * Bonus: Lock Service/Caching/Transactions
+ * Bonus: Security/Caching/Transactions
   
