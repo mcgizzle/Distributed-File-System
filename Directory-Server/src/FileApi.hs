@@ -31,12 +31,15 @@ api = Proxy
 
 type FileAPI = Capture "path" String :> Get '[JSON] File 
           :<|> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
+          :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
 
-getFile' :<|> sendFile' = client api
+getFile' :<|> sendFile' :<|> updateFile' = client api
 
 sendFile :: File -> ClientM ServerInfo
 sendFile f = sendFile' f >>= return
 
+updateFile :: File -> ClientM ServerInfo
+updateFile f = updateFile' f
 
 query :: Show a => ClientM a -> FileNode -> IO ()
 query q node = do
