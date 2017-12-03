@@ -23,18 +23,29 @@ import Config
 import Data.Maybe (fromJust)
 import Control.Monad.Reader (when, MonadIO, MonadReader, asks, liftIO)
 
-lockFile :: MonadIO m => Maybe FilePath -> MagicT m M.LockInfo
-lockFile path' = do
+unlockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m ()
+unlockFile id path' = do
+  let path = fromJust path'
+  isLocked <- checkIfLocked path
+  if isLocked then do
+    liftIO $ putStrLn "Unlocking file"
+    removeFromQueue path id
+    alertNextInQueue path
+    return ()
+  else throwError errNoLock
+
+lockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m M.LockInfo
+lockFile id path' = do
   let path = fromJust path'
   isLocked <- checkIfLocked path
   case isLocked of
     True -> do
       liftIO $ putStrLn "File is locked adding client to queue"
-      id <- addToQueue path
+      addToQueue path id
       return $ M.LockInfo path id False
     False -> do
-      runDB $ insert $ M.LockQueue path [0]
-      return $ M.LockInfo path 0 True
+      runDB $ insertUnique $ M.LockQueue path [id]
+      return $ M.LockInfo path id True
 
 checkIfLocked :: MonadIO m => FilePath -> MagicT m Bool
 checkIfLocked path = do
@@ -43,5 +54,16 @@ checkIfLocked path = do
     Just res' -> return True
     Nothing   -> return False
 
---addToQueue :: MonadIO m => MagicT m Int
-addToQueue path = return 1
+-- TODO: Function to alert user when file becomes available
+alertNextInQueue path = undefined 
+
+removeFromQueue :: MonadIO m => FilePath -> Int -> MagicT m ()
+removeFromQueue path id = runDB $ updateWhere [ M.LockQueueFilePath ==. path ]  
+                                              [ M.LockQueueQueue -=. [id] ]
+
+
+addToQueue :: MonadIO m => FilePath -> Int -> MagicT m ()
+addToQueue path id = runDB $ updateWhere [ M.LockQueueFilePath ==. path ]  
+                                         [ M.LockQueueQueue +=. [id] ]
+
+errNoLock = err404 { errBody="User does not have a lock on this file"}
