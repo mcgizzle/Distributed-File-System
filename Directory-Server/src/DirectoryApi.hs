@@ -25,8 +25,10 @@ import Config
 import Models
 import Controller
 
-type DirectoryAPI = "ls" :> Get '[JSON] [FileInfo]
-               :<|> ReqBody '[JSON] File :> Post '[JSON] FileInfo 
+type DirectoryAPI = "ls"                            :> Get '[JSON] [FileInfo]
+               :<|> "new"   :> ReqBody '[JSON] File :> Post '[JSON] FileInfo 
+               :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] FileInfo
+               :<|> QueryParam "path" FilePath :> QueryParam "name" String :> Get '[JSON] FileInfo 
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (directoryApp cfg)
@@ -41,7 +43,9 @@ convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
 directoryServer :: MonadIO m => ServerT DirectoryAPI (MagicT m)
 directoryServer = Controller.listFiles
-             :<|> Controller.putFile
+             :<|> Controller.newFile
+             :<|> Controller.writeFile
+             :<|> Controller.getFile
 
 api :: Proxy DirectoryAPI
 api = Proxy
