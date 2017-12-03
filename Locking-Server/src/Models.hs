@@ -27,7 +27,7 @@ data LockInfo = LockInfo {
   path :: String,
   id :: Int,
   locked :: Bool
-}deriving(Generic)
+}deriving(Generic,Show)
 instance ToJSON LockInfo
 instance FromJSON LockInfo
 
@@ -35,7 +35,7 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 LockQueue json
     filePath String
     queue [Int]
-    UniqueFile filePath 
+    UniqueFilePath filePath 
 |]
 
 doMigrations :: SqlPersistT IO ()
