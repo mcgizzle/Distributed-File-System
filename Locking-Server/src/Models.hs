@@ -23,11 +23,9 @@ import Config
 import Data.Text            (Text)
 import Data.Time
 
-type RequestId = Int
-
 data LockInfo = LockInfo {
   path :: String,
-  position :: Int,
+  id :: Int,
   locked :: Bool
 }deriving(Generic)
 instance ToJSON LockInfo
@@ -36,7 +34,7 @@ instance FromJSON LockInfo
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 LockQueue json
     filePath String
-    queue [RequestId]
+    queue [Int]
     UniqueFile filePath 
 |]
 
