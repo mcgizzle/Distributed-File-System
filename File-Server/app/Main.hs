@@ -32,6 +32,7 @@ FileNode json
     host String
     port Int 
     active Bool
+    NodeInfo host port
     deriving Show
 |]
 
@@ -42,13 +43,12 @@ informNetwork port = do
   runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
     flip runSqlPersistMPool pool $ do
             runMigration migrateAll
-            insert $ FileNode "localhost" port True
+            insertUnique $ FileNode "localhost" port True
             return ()
 main :: IO ()
 main = do
   [port] <- getArgs
   putStrLn $ "Server is running on port: " ++ port
-  runServer (read port)
   forkIO $ informNetwork (read port)
   runServer (read port)
 
