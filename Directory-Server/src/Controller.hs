@@ -57,7 +57,7 @@ writeFile f@File{..} = do
       let fileKey = entityKey res'
       liftIO $ mapM (\n -> query (updateFile f)  n) nodes
       time <- liftIO getCurrentTime
-      let f' = FileInfo fileName filePath False time nodeKeys
+      let f' = FileInfo fileName filePath time nodeKeys
       runDB $ replace fileKey f'
       return f'
     Nothing   -> throwError errFileDoesNotExist
@@ -67,7 +67,7 @@ newFile f = do
   (nodes,keys) <- getAvailableNodes
   liftIO $ mapM_ (\n -> query (sendFile f) n) nodes
   time <- liftIO getCurrentTime
-  let f' = FileInfo (fileName f) (filePath f) False time keys
+  let f' = FileInfo (fileName f) (filePath f) time keys
   res <- runDB $ insertUnique f'
   case res of
     Just _  -> return f'

@@ -39,7 +39,6 @@ FileNode json
 FileInfo json
     file_name String
     file_path String
-    locked Bool
     last_write UTCTime
     nodes [FileNodeId]
     UniqueFile file_path file_name
