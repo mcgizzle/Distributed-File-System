@@ -12,9 +12,6 @@ module LockingApi
     ( startApp
     ) where
 
---import Prelude ()
---import Prelude.Compat
-
 import Control.Monad.Except
 import Network.Wai
 import Network.Wai.Handler.Warp hiding (FileInfo)
@@ -25,7 +22,10 @@ import Config
 import Models
 import Controller
 
-type LockingAPI = "lock" :> QueryParam "path" FilePath :> Post '[JSON] LockInfo
+type LockingAPI = "lock" :> Capture "id" Int 
+                         :> QueryParam "path" FilePath  :> Post '[JSON] LockInfo
+             :<|> "unlock" :> Capture "id" Int 
+                         :> QueryParam "path" FilePath  :> Post []
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (lockingApp cfg)
