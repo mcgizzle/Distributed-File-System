@@ -32,6 +32,7 @@ library
                      , http-media
                      , http-client
                      , directory
+                     , filepath
                      , aeson-compat
   default-language:    Haskell2010
 
