@@ -6,6 +6,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RecordWildCards #-} 
 
 module Server
     ( runServer
@@ -15,6 +16,7 @@ module Server
 import Prelude ()
 import Prelude.Compat
 
+import Control.Monad (unless)
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson.Compat
@@ -32,9 +34,9 @@ import Network.Wai.Handler.Warp
 import Servant
 import System.Directory
 import qualified Data.Aeson.Parser
+import System.FilePath
 
 import Api
-
 
 runServer :: Int -> IO ()
 runServer port = run port app
@@ -46,29 +48,38 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = getFile :<|> putFile
+server = getFile :<|> putFile :<|> updateFile
 
 putFile :: File -> Handler ServerInfo
-putFile f = do
-  let path = "file-store/" ++ fileName f
-  liftIO $ putStrLn $ "Saving file: "++ path
-  exists <- liftIO $ doesFileExist path
+putFile f@File{..} = do
+  let path = "file-store" ++ filePath 
+  unless (filePath == "/") $ liftIO $ createDirectoryIfMissing True path
+  liftIO $ putStrLn $ "Saving file: "++ (path ++ fileName)
+  exists <- liftIO $ doesFileExist (path ++ fileName)
   if exists
   then throwError errFileExists
   else do
-    liftIO $ writeFile path (fileContents f)
+    liftIO $ writeFile (path ++ fileName) fileContents 
     return $ ServerInfo True
 
-getFile :: String -> Handler File
-getFile f' = do
-  let f = "file-store/" ++ f'
+getFile :: FilePath -> Handler File
+getFile f = do
+  let path = "file-store/" ++ f
   liftIO $ putStrLn $ "fetching file: "++ f
-  exists <- liftIO $ doesFileExist f
+  exists <- liftIO $ doesFileExist path
   if exists
     then do
-      contents <- liftIO $ readFile f 
-      return $ File f contents
+      contents <- liftIO $ readFile path 
+      return $ File (takeFileName f) path contents
     else throwError errFileNotExists
+
+updateFile :: File -> Handler ServerInfo
+updateFile f@File{..} = do
+  let path = "file-store" ++ filePath 
+  liftIO $ putStrLn $ "updating file: "++ fileName
+  liftIO $ writeFile (path ++ fileName) fileContents 
+  return $ ServerInfo True
+
 
 errFileNotExists= err404 { errBody = "File does not exist." }
 errFileExists = err400 { errBody = "File with this name already exists"}
