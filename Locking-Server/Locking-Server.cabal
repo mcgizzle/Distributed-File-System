@@ -18,6 +18,7 @@ library
   exposed-modules:     Config, Controller, LockingApi, Models
   build-depends:       base >= 4.7 && < 5
                      , aeson
+                     , base-compat
                      , servant-server
                      , wai
                      , warp
