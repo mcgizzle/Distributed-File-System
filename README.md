@@ -12,7 +12,8 @@ This is the overarching repo for the the system. Each folder will contain a piec
     * TODO: Implement round-robin replication algorithm
 
  * Locking
-    * Under construction
+    * Locking and Unlocking of files implemented
+    * TODO: Notify client on lock release
   
  * Bonus: Security/Caching/Transactions
   
