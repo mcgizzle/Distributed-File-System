@@ -14,7 +14,6 @@
 module Main where
 
 import Server
-import Client
 import System.Environment
 
 import Control.Concurrent (forkIO)
