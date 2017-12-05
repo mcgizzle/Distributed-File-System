@@ -36,7 +36,7 @@ import System.Directory
 import qualified Data.Aeson.Parser
 import System.FilePath
 
-import Api
+import Api.File hiding (api,updateFile)
 
 runServer :: Int -> IO ()
 runServer port = run port app
@@ -44,10 +44,10 @@ runServer port = run port app
 app :: Application
 app = serve api server
 
-api :: Proxy API
+api :: Proxy FileAPI
 api = Proxy
 
-server :: Server API
+server :: Server FileAPI
 server = getFile :<|> putFile :<|> updateFile
 
 putFile :: File -> Handler ServerInfo

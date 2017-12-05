@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Server, Client, Api
   build-depends:       base >= 4.7 && < 5
+                     , api
                      , aeson
                      , servant-server
                      , servant-client
