@@ -43,6 +43,7 @@ lockFile id path' = do
     updateQueue (++) path [id]
     return $ M.LockInfo path id False
   else do
+    liftIO $ putStrLn $ "Locking file: "++ path
     runDB $ insertUnique $ M.LockQueue path [id]
     return $ M.LockInfo path id True
 
