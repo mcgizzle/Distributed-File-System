@@ -23,6 +23,9 @@ import Config
 import Data.Text            (Text)
 import Data.Time
 
+import Api.Directory
+
+
 data File = File {
   fileName :: String,
   filePath :: String,
