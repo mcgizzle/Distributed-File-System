@@ -11,42 +11,14 @@
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module Models where
+module Database where
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
-import Data.Aeson           (FromJSON, ToJSON)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
 import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
                                        share, sqlSettings)
-import GHC.Generics         (Generic)
 import Config               
-import Data.Text            (Text)
-import Data.Time
-
 import Api.Directory
-
-
-data File = File {
-  fileName :: String,
-  filePath :: String,
-  fileContents :: String
-}deriving (Generic, Show)
-instance FromJSON File
-instance ToJSON File
-
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-FileNode json
-    host String
-    port Int
-    active Bool
-FileInfo json
-    file_name String
-    file_path String
-    last_write UTCTime
-    nodes [FileNodeId]
-    UniqueFile file_path file_name
-    deriving Show
-|]
 
 doMigrations :: SqlPersistT IO ()
 doMigrations = runMigration migrateAll

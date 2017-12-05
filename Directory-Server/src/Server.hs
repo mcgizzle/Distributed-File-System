@@ -8,7 +8,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module DirectoryApi 
+module Server 
     ( startApp
     ) where
 
@@ -22,14 +22,11 @@ import Servant
 import Control.Category     ((<<<), (>>>))
 
 import Config
-import Models
+import Database
 import Controller
 
-type DirectoryAPI = "ls"                            :> Get '[JSON] [FileInfo]
-               :<|> "new"   :> ReqBody '[JSON] File :> Post '[JSON] FileInfo 
-               :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] FileInfo
-               :<|> QueryParam "path" FilePath      :> 
-                    QueryParam "name" String        :> Get '[JSON] FileInfo  
+import Api.Directory
+
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (directoryApp cfg)

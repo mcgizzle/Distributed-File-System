@@ -23,9 +23,11 @@ import Servant
 import Data.Maybe (fromJust)
 import Data.Time
 
-import Models as M 
 import Config
-import FileApi
+import Database
+
+import Api.Directory as M
+import Api.File
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
 

@@ -15,10 +15,9 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     DirectoryApi, FileApi, 
-                       Config, Models, Controller 
+  exposed-modules:     Server, Config, Database, Controller 
   build-depends:       base >= 4.7 && < 5
-                     , File-System
+                     , api
                      , aeson
                      , attoparsec
                      , aeson-compat
