@@ -57,17 +57,17 @@ writeFile f@File{..} = do
       let nodeKeys = M.fileInfoNodes $ entityVal res'
       nodes <- mapM nodeFromKey nodeKeys
       let fileKey = entityKey res'
-      liftIO $ mapM (\n -> query (updateFile f)  n) nodes
+      liftIO $ mapM (\n -> query (updateFile f)  (M.fileNodeHost n,M.fileNodePort n)) nodes
       time <- liftIO getCurrentTime
       let f' = FileInfo fileName filePath time nodeKeys
       runDB $ replace fileKey f'
       return f'
     Nothing   -> throwError errFileDoesNotExist
 
-newFile :: MonadIO m => File -> MagicT m FileInfo
+newFile :: MonadIO m => File -> MagicT m M.FileInfo
 newFile f = do
   (nodes,keys) <- getAvailableNodes
-  liftIO $ mapM_ (\n -> query (sendFile f) n) nodes
+  liftIO $ mapM_ (\n -> query (sendFile f) (M.fileNodeHost n,M.fileNodePort n)) nodes
   time <- liftIO getCurrentTime
   let f' = FileInfo (fileName f) (filePath f) time keys
   res <- runDB $ insertUnique f'
