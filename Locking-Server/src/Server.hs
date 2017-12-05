@@ -11,7 +11,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE TypeFamilies               #-}
 
-module LockingApi 
+module Server 
     ( startApp
     ) where
 
@@ -25,13 +25,9 @@ import Servant
 import Control.Category     ((<<<), (>>>))
 
 import Config
-import Models
 import Controller
 
-type LockingAPI = "lock" :> Capture "id" Int :> 
-                  QueryParam "path" FilePath :> Get '[JSON] LockInfo
-             :<|> "unlock" :>  Capture "id" Int :> 
-                  QueryParam "path" FilePath :> Get '[JSON] ()
+import Api.Locking
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (lockingApp cfg)

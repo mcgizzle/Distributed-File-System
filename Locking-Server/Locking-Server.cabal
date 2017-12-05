@@ -15,8 +15,9 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Config, Controller, LockingApi, Models
+  exposed-modules:     Config, Controller, Server, Database
   build-depends:       base >= 4.7 && < 5
+                     , api
                      , aeson
                      , base-compat
                      , servant-server

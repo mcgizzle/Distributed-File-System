@@ -16,12 +16,14 @@ lockFile,unlockFile
 import Database.Persist
 import Servant
 
-import Models as M 
 import Config
+import Database
 
 import Data.List as DL
 import Data.Maybe (fromJust)
 import Control.Monad.Reader (when, MonadIO, MonadReader, asks, liftIO)
+
+import Api.Locking as M
 
 unlockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m ()
 unlockFile id path' = do

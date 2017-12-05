@@ -3,9 +3,9 @@ module Main where
 import Database.Persist.Sql (runSqlPool)
 import System.Environment   (getArgs)
 
-import LockingApi
+import Server 
 import Config
-import Models (doMigrations)
+import Database (doMigrations)
 
 main :: IO ()
 main = do
