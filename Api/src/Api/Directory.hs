@@ -28,6 +28,8 @@ import GHC.Generics         (Generic)
 import Data.Text            (Text)
 import Data.Time
 
+import Api.File
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
     host String
@@ -41,14 +43,6 @@ FileInfo json
     UniqueFile file_path file_name
     deriving Show
 |]
-
-data File = File {
-  fileName :: String,
-  filePath :: String,
-  fileContents :: String
- }deriving (Generic,Show)
-instance FromJSON File
-instance ToJSON File
 
 
 type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]

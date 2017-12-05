@@ -9,8 +9,6 @@
 
 module Api.File where
 
-import Api.Directory
-
 import Data.Aeson
 import Data.Proxy
 import GHC.Generics
@@ -25,6 +23,15 @@ newtype ServerInfo = ServerInfo  {
 } deriving(Generic,Show)
 instance ToJSON ServerInfo
 instance FromJSON ServerInfo
+
+data File = File {
+  fileName :: String,
+  filePath :: String,
+  fileContents :: String
+ }deriving (Generic,Show)
+instance FromJSON File
+instance ToJSON File
+
 
 api :: Proxy FileAPI
 api = Proxy
@@ -41,11 +48,9 @@ sendFile f = sendFile' f >>= return
 updateFile :: File -> ClientM ServerInfo
 updateFile f = updateFile' f
 
-query :: Show a => ClientM a -> FileNode -> IO ()
-query q node = do
+query :: Show a => ClientM a -> (String, Int) -> IO ()
+query q (host,port) = do
   manager' <- newManager defaultManagerSettings
-  let host = fileNodeHost node 
-  let port = fileNodePort node
   res <- runClientM q (ClientEnv manager' (BaseUrl Http host port "")) 
   case res of
     Left err   -> print err
