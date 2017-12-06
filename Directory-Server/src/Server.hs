@@ -20,13 +20,13 @@ import Network.Wai
 import Network.Wai.Handler.Warp hiding (FileInfo)
 import Servant
 import Control.Category     ((<<<), (>>>))
+import Control.Monad.Reader
 
 import Config
 import Database
 import Controller
 
 import Api.Directory
-
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (directoryApp cfg)
@@ -44,6 +44,7 @@ directoryServer = Controller.listFiles
              :<|> Controller.newFile
              :<|> Controller.writeFile
              :<|> Controller.getFile
+             :<|> Controller.initFileNode
 
 api :: Proxy DirectoryAPI
 api = Proxy

@@ -11,7 +11,8 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Controller(
-listFiles,newFile,writeFile,getFile
+listFiles,newFile,writeFile,getFile,
+initFileNode
 )where
 
 import Prelude hiding (writeFile)
@@ -29,7 +30,21 @@ import Database
 import Api.Directory as M
 import Api.File
 
-import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
+import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO, lift)
+import Control.Concurrent.STM
+
+-- File Server Init
+initFileNode ::  MonadIO m => String -> Int -> MagicT m InitResponse
+initFileNode host port = do
+        updateNodes host port
+        let entry = M.FileNode host port True
+        runDB $ upsert entry [M.FileNodeActive =. True]
+        return $ M.InitResponse True
+
+updateNodes :: (MonadReader Config m, MonadIO m) => String -> Int -> m ()
+updateNodes host port = do
+  nodes <- asks fileNodes
+  liftIO $ atomically $ modifyTVar' nodes $ (++) [(host,port)]
 
 listFiles :: MonadIO m => MagicT m [FileInfo]
 listFiles = do
@@ -86,6 +101,7 @@ getAvailableNodes :: MonadIO m => MagicT m ([M.FileNode],[Key M.FileNode])
 getAvailableNodes = do
   res :: [Entity M.FileNode] <- runDB $ selectList [M.FileNodeActive ==. True] []
   return (Prelude.map entityVal res, Prelude.map entityKey res)
+
 
 errFileDoesNotExist = err404 { errBody = "This file does not exits brah"}
 errFileExists = err400 { errBody = "File with this name already exists"}
