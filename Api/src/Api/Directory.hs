@@ -30,6 +30,12 @@ import Data.Time
 
 import Api.File
 
+newtype InitResponse = InitResponse {
+                  success :: Bool
+                        } deriving(Generic)
+instance ToJSON InitResponse
+instance FromJSON InitResponse
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
     host String
@@ -50,6 +56,9 @@ type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
                :<|> "write" :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo
                :<|> QueryParam "path" FilePath 
                  :> QueryParam "name" String          :> Get '[JSON] FileInfo  
+               -- File server init endpoint
+               :<|> "fs"    :> Capture "host" String  
+                            :> Capture "port" Int     :> Post '[JSON] InitResponse 
 
 
 
