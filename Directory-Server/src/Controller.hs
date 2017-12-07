@@ -11,7 +11,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Controller(
-listFiles,newFile,writeFile,getFile,
+listFiles,newFile,writeFile,getFileLoc,
 initFileNode
 )where
 
@@ -27,24 +27,35 @@ import Data.Time
 import Config
 import Database
 
-import Api.Directory as M
+import Api.Directory as M 
 import Api.File
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO, lift)
-import Control.Concurrent.STM
 
--- File Server Init
+---- File Nodes ------------------------
 initFileNode ::  MonadIO m => String -> Int -> MagicT m InitResponse
 initFileNode host port = do
-        updateNodes host port
-        let entry = M.FileNode host port True
-        runDB $ upsert entry [M.FileNodeActive =. True]
-        return $ M.InitResponse True
+  let entry = M.FileNode host port Nothing True
+  runDB $ upsert entry [M.FileNodeActive =. True]
+  return $ M.InitResponse True
 
-updateNodes :: (MonadReader Config m, MonadIO m) => String -> Int -> m ()
-updateNodes host port = do
-  nodes <- asks fileNodes
-  liftIO $ atomically $ modifyTVar' nodes $ (++) [(host,port)]
+getAvailableNodes :: MonadIO m => MagicT m ([M.FileNode],[Key M.FileNode])
+getAvailableNodes = do
+  time <- liftIO $ getCurrentTime
+  res <- runDB $ do
+          nodes <- selectList [M.FileNodeActive ==. True] [Desc M.FileNodeLastStore, LimitTo 3 ]
+          mapM_ (\ node -> update (entityKey node) [M.FileNodeLastStore =. Just time]) nodes
+          return nodes
+  return (Prelude.map entityVal res, Prelude.map entityKey res)
+
+nodeFromKey :: MonadIO m => M.FileNodeId -> MagicT m M.FileNode
+nodeFromKey key = do
+  res :: Maybe (Entity M.FileNode) <- runDB $ selectFirst [ M.FileNodeId ==. key ] []
+  case res of
+    Just res' -> return $ entityVal res'
+    Nothing   -> throwError errNodeDoesNotExist
+
+----------------------------------------
 
 listFiles :: MonadIO m => MagicT m [FileInfo]
 listFiles = do
@@ -53,8 +64,8 @@ listFiles = do
     []   -> throwError err404
     _    -> return $ Prelude.map entityVal res
   
-getFile :: MonadIO m => Maybe FilePath -> Maybe String -> MagicT m FileInfo
-getFile path name = do
+getFileLoc :: MonadIO m => Maybe FilePath -> Maybe String -> MagicT m FileInfo
+getFileLoc path name = do
   let path' = fromJust path
   let name' = fromJust name
   res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path'
@@ -72,7 +83,7 @@ writeFile f@File{..} = do
       let nodeKeys = M.fileInfoNodes $ entityVal res'
       nodes <- mapM nodeFromKey nodeKeys
       let fileKey = entityKey res'
-      liftIO $ mapM (\n -> query (updateFile f)  (M.fileNodeHost n,M.fileNodePort n)) nodes
+      liftIO $ mapM (\n -> Api.File.query (updateFile' f)  (M.fileNodeHost n,M.fileNodePort n)) nodes
       time <- liftIO getCurrentTime
       let f' = FileInfo fileName filePath time nodeKeys
       runDB $ replace fileKey f'
@@ -82,25 +93,13 @@ writeFile f@File{..} = do
 newFile :: MonadIO m => File -> MagicT m M.FileInfo
 newFile f = do
   (nodes,keys) <- getAvailableNodes
-  liftIO $ mapM_ (\n -> query (sendFile f) (M.fileNodeHost n,M.fileNodePort n)) nodes
+  liftIO $ mapM_ (\n -> Api.File.query (sendFile' f) (M.fileNodeHost n,M.fileNodePort n)) nodes
   time <- liftIO getCurrentTime
   let f' = FileInfo (fileName f) (filePath f) time keys
   res <- runDB $ insertUnique f'
   case res of
     Just _  -> return f'
     Nothing -> throwError errFileExists
-
-nodeFromKey :: MonadIO m => M.FileNodeId -> MagicT m M.FileNode
-nodeFromKey key = do
-  res :: Maybe (Entity M.FileNode) <- runDB $ selectFirst [ M.FileNodeId ==. key ] []
-  case res of
-    Just res' -> return $ entityVal res'
-    Nothing   -> throwError errNodeDoesNotExist
-
-getAvailableNodes :: MonadIO m => MagicT m ([M.FileNode],[Key M.FileNode])
-getAvailableNodes = do
-  res :: [Entity M.FileNode] <- runDB $ selectList [M.FileNodeActive ==. True] []
-  return (Prelude.map entityVal res, Prelude.map entityKey res)
 
 
 errFileDoesNotExist = err404 { errBody = "This file does not exits brah"}

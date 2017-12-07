@@ -23,8 +23,6 @@ import Database.Persist.Postgresql (ConnectionPool, ConnectionString,
 import Servant                     (ServantErr)
 import System.Environment          (lookupEnv)
 
-import Control.Concurrent.STM 
-
 -- Magic Monad Stuff -----------------------------------------------
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT,MonadIO)
@@ -41,8 +39,7 @@ type Magic = MagicT IO
 
 data Config = Config {
   environment :: Environment,
-  pool        :: ConnectionPool,
-  fileNodes :: TVar [(String,Int)]
+  pool        :: ConnectionPool
 }
 
 data Environment = Development
@@ -56,11 +53,9 @@ getConfig :: IO Config
 getConfig = do
   env <- getEnv
   p <- makePool env
-  nodes <- atomically $ newTVar []
   return Config {
             environment = env,
-            pool = p,
-            fileNodes = nodes
+            pool = p
           }
 
 getEnv :: IO Environment

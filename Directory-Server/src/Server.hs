@@ -43,7 +43,7 @@ directoryServer :: MonadIO m => ServerT DirectoryAPI (MagicT m)
 directoryServer = Controller.listFiles
              :<|> Controller.newFile
              :<|> Controller.writeFile
-             :<|> Controller.getFile
+             :<|> Controller.getFileLoc
              :<|> Controller.initFileNode
 
 api :: Proxy DirectoryAPI
