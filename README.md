@@ -3,21 +3,18 @@ This is the overarching repo for the the system. Each folder will contain a piec
 
  ## Distributed Transparent File Access
  * __Complete__
- * TODO: [README](https://github.com/McGizzle/Distributed-File-System/blob/master/Directory-Server/README.md)
 
  ## Directory Service
  * __Complete__
- * TODO: [README](https://github.com/McGizzle/Distributed-File-System/blob/master/Directory-Server/README.md)
  
  ## Replication
- * Under Construction: Progress 80%
- * TODO: Implement round-robin replication algorithm
+ * __Complete__
 
  ## Locking 
  * Locking and Unlocking of files implemented
- * TODO: Notify client on lock release
+ * TODO: Notify client on lock release, lock directories
   
- ## Command line based program for ineraction
+ ## Client for interaction
  * Not started yet
 
  ### Bonus: 
