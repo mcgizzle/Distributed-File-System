@@ -15,40 +15,23 @@ module Main where
 
 import Server
 import System.Environment
+import Control.Monad (unless)
 
-import Control.Concurrent (forkIO)
+import Api.Directory
 
-import Data.Aeson           (FromJSON, ToJSON)
-import Database.Persist 
-import Database.Persist.Sql 
-import Database.Persist.TH  
-import Database.Persist.Postgresql
-import           Control.Monad.IO.Class  (liftIO)
-import           Control.Monad.Logger    (runStderrLoggingT)
-                                       
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-FileNode json
-    host String
-    port Int 
-    active Bool
-    NodeInfo host port
-    deriving Show
-|]
+informNetwork :: Int -> (String,Int) -> IO ()
+informNetwork port (dirHost, dirPort) = loop
+        where loop = do 
+                resp <- query (initFileNode' "localhost" port) (dirHost,dirPort) 
+                unless resp $ loop
+                return ()
 
-connStr = "host=localhost dbname=fs_dev user=root password=root port=5432"
-
-informNetwork :: Int -> IO ()
-informNetwork port = do
-  runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-    flip runSqlPersistMPool pool $ do
-            runMigration migrateAll
-            insertUnique $ FileNode "localhost" port True
-            return ()
 main :: IO ()
 main = do
-  [port] <- getArgs
+  [port,dirHost,dirPort] <- getArgs
   putStrLn $ "Server is running on port: " ++ port
-  forkIO $ informNetwork (read port)
+  informNetwork (read port) (dirHost, read dirPort)
+  putStrLn $ "Initialised with Directory Server"
   runServer (read port)
 
 
