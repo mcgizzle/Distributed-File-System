@@ -33,20 +33,16 @@ instance FromJSON File
 instance ToJSON File
 
 
-api :: Proxy FileAPI
-api = Proxy
+fileApi :: Proxy FileAPI
+fileApi = Proxy
 
 type FileAPI = Capture "path" String :> Get '[JSON] File 
           :<|> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
           :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
 
-getFile' :<|> sendFile' :<|> updateFile' = client api
-
-sendFile :: File -> ClientM ServerInfo
-sendFile f = sendFile' f >>= return
-
-updateFile :: File -> ClientM ServerInfo
-updateFile f = updateFile' f
+sendFile' :: File -> ClientM ServerInfo
+updateFile' :: File -> ClientM ServerInfo
+getFile' :<|> sendFile' :<|> updateFile' = client fileApi
 
 query :: Show a => ClientM a -> (String, Int) -> IO ()
 query q (host,port) = do

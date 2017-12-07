@@ -19,6 +19,10 @@
 module Api.Directory where
 
 import Servant
+import Servant.API
+import Servant.Client
+import Network.HTTP.Client (newManager, defaultManagerSettings)
+
 import Data.Aeson
 
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
@@ -28,7 +32,7 @@ import GHC.Generics         (Generic)
 import Data.Text            (Text)
 import Data.Time
 
-import Api.File
+import Api.File (File) 
 
 newtype InitResponse = InitResponse {
                   success :: Bool
@@ -40,7 +44,9 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
     host String
     port Int
+    lastStore UTCTime Maybe
     active Bool
+    UniqueNode host port
 FileInfo json
     file_name String
     file_path String
@@ -50,6 +56,8 @@ FileInfo json
     deriving Show
 |]
 
+directoryApi :: Proxy DirectoryAPI
+directoryApi = Proxy
 
 type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
                :<|> "new"   :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo 
@@ -61,4 +69,18 @@ type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
                             :> Capture "port" Int     :> Post '[JSON] InitResponse 
 
 
+listFiles' :: ClientM [FileInfo]
+newFile' :: File -> ClientM FileInfo
+writeFile' :: File -> ClientM FileInfo
+getFileLoc' :: Maybe String -> Maybe String -> ClientM FileInfo
+initFileNode' :: String -> Int -> ClientM InitResponse
+( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
+ initFileNode' ) = client directoryApi
 
+query :: ClientM a -> (String, Int) -> IO Bool
+query q (host,port) = do
+  manager' <- newManager defaultManagerSettings
+  res <- runClientM q (ClientEnv manager' (BaseUrl Http host port "")) 
+  case res of
+    Left _  -> return False
+    Right _ -> return True
