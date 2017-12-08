@@ -63,7 +63,7 @@ type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
                :<|> "new"   :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo 
                :<|> "write" :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo
                :<|> QueryParam "path" FilePath 
-                 :> QueryParam "name" String          :> Get '[JSON] FileInfo  
+                 :> QueryParam "name" String          :> Get '[JSON] [FileNode]  
                -- File server init endpoint
                :<|> "fs"    :> Capture "host" String  
                             :> Capture "port" Int     :> Post '[JSON] InitResponse 
@@ -72,10 +72,11 @@ type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
 listFiles' :: ClientM [FileInfo]
 newFile' :: File -> ClientM FileInfo
 writeFile' :: File -> ClientM FileInfo
-getFileLoc' :: Maybe String -> Maybe String -> ClientM FileInfo
+getFileLoc' :: Maybe String -> Maybe String -> ClientM [FileNode]
 initFileNode' :: String -> Int -> ClientM InitResponse
 ( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
  initFileNode' ) = client directoryApi
+
 
 query :: ClientM a -> (String, Int) -> IO Bool
 query q (host,port) = do
