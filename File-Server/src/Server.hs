@@ -62,8 +62,9 @@ putFile f@File{..} = do
     liftIO $ writeFile (path ++ fileName) fileContents 
     return $ ServerInfo True
 
-getFile :: FilePath -> Handler File
-getFile f = do
+getFile :: Maybe FilePath -> Handler File
+getFile f' = do
+  let f = fromJust f'
   let path = "file-store/" ++ f
   liftIO $ putStrLn $ "fetching file: "++ f
   exists <- liftIO $ doesFileExist path
