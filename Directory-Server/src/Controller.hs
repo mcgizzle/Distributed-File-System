@@ -64,15 +64,17 @@ listFiles = do
     []   -> throwError err404
     _    -> return $ Prelude.map entityVal res
   
-getFileLoc :: MonadIO m => Maybe FilePath -> Maybe String -> MagicT m FileInfo
+getFileLoc :: MonadIO m => Maybe FilePath -> Maybe String -> MagicT m [FileNode]
 getFileLoc path name = do
   let path' = fromJust path
   let name' = fromJust name
   res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path'
                              , M.FileInfoFile_name ==. name' ] []
   case res of
-    Just res' -> return $ entityVal res'
-    Nothing -> throwError errFileDoesNotExist
+    Just res' -> do
+            nodes <- mapM nodeFromKey (M.fileInfoNodes $ entityVal res')
+            return nodes     
+    Nothing   -> throwError errFileDoesNotExist
 
 writeFile :: MonadIO m => File -> MagicT m FileInfo
 writeFile f@File{..} = do
