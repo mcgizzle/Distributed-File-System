@@ -15,15 +15,17 @@ extra-source-files:  README.md
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Directory
+  exposed-modules:     Directory, Locking, Config
   build-depends:       base >= 4.7 && < 5
                      , api
                      , bytestring
+                     , filepath
                      , servant
                      , servant-client
                      , servant-server
                      , http-client
                      , editor-open
+                     , mtl
   default-language:    Haskell2010
 
 
@@ -33,3 +35,4 @@ executable Client
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                       ,Client
+                     , mtl
