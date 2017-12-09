@@ -28,6 +28,7 @@ library
                      , http-media
                      , mtl
                      , monad-logger
+                     , filepath
                      , persistent
                      , persistent-template
                      , persistent-postgresql

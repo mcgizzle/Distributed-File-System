@@ -24,6 +24,8 @@ import Servant
 import Data.Maybe (fromJust)
 import Data.Time
 
+import System.FilePath
+
 import Config
 import Database
 
@@ -64,12 +66,12 @@ listFiles = do
     []   -> throwError err404
     _    -> return $ Prelude.map entityVal res
   
-getFileLoc :: MonadIO m => Maybe FilePath -> Maybe String -> MagicT m [FileNode]
-getFileLoc path name = do
-  let path' = fromJust path
-  let name' = fromJust name
-  res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path'
-                             , M.FileInfoFile_name ==. name' ] []
+getFileLoc :: MonadIO m => Maybe FilePath -> MagicT m [FileNode]
+getFileLoc path' = do
+  let path = takeDirectory $ fromJust path'
+  let name = takeFileName path
+  res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path
+                             , M.FileInfoFile_name ==. name ] []
   case res of
     Just res' -> do
             nodes <- mapM nodeFromKey (M.fileInfoNodes $ entityVal res')
