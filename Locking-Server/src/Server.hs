@@ -41,7 +41,8 @@ magicToServer cfg = enter (convertMagic cfg >>> NT Handler) lockingServer
 convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
 lockingServer :: MonadIO m => ServerT LockingAPI (MagicT m)
-lockingServer = Controller.lockFile
+lockingServer = Controller.checkLock
+           :<|> Controller.lockFile
            :<|> Controller.unlockFile
 
 api :: Proxy LockingAPI
