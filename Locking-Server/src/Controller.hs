@@ -62,7 +62,8 @@ isAvailable :: MonadIO m => Int -> FilePath -> MagicT m Bool
 isAvailable id path = do
   res <- runDB $ do
     now <- liftIO $ getCurrentTime
-    locked <- selectFirst [ M.LockQueueFilePath ==. path] []
+    locked <- selectFirst [ M.LockQueueFilePath ==. path,
+                            M.LockQueueQueue    !=. []   ] []
     inDate <- selectFirst [ M.LockQueueFilePath ==. path
                                    , M.LockQueueTimeout <. now ] [] 
     case (isJust locked,isJust inDate) of
