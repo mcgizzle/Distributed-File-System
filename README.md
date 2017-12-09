@@ -11,11 +11,10 @@ This is the overarching repo for the the system. Each folder will contain a piec
  * __Complete__
 
  ## Locking 
- * Locking and Unlocking of files implemented
- * TODO: Notify client on lock release, lock directories
+ * __Complete__
   
- ## Client for interaction
- * Not started yet
+ ## Client Program
+ * Under Construction
 
  ### Bonus: 
  * Security
