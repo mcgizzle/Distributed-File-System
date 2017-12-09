@@ -16,3 +16,12 @@ data Config = Config {
 
 type App = ReaderT Config IO 
 
+getConfig :: IO Config
+getConfig = do
+  return Config {
+    userId = 1,
+    directoryNode = ("localhost",8080),
+    lockingNode = ("localhost",8000)
+         }
+
+

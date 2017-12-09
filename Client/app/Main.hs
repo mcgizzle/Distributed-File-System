@@ -1,17 +1,10 @@
 module Main where
 
 import Directory
+import Locking
 import Config
 
 import Control.Monad.Reader
-
-getConfig :: IO Config
-getConfig = do
-  return Config {
-    userId = 1,
-    directoryNode = ("localhost",8080),
-    lockingNode = ("localhost",8000)
-         }
 
 main :: IO ()
 main = do
@@ -29,6 +22,8 @@ console = loop
        ["read",path]     -> Directory.readFile path
        ["new",name,path] -> Directory.newFile name path
        ["write",path]    -> Directory.writeFile path
+       ["lock",path]     -> Locking.lockFile path
+       ["unlock",path]   -> Locking.unlockFile path
        _                 -> liftIO $ putStrLn $ "Wrong command u fool, r u thick or summin?" 
                                             ++ "\nCOMMANDS:\n" 
                                             ++ "---> ls \n" 

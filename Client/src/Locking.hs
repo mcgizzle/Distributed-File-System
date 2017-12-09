@@ -23,7 +23,9 @@ lockFile path = do
   id <- asks userId
   res <- sendQuery (lockFile' id (Just path))
   case res of
-    Right res' -> liftIO $ putStrLn $ "You have succesfully locked the file.\n"
+    Right res' -> do
+      if (not (locked res')) then liftIO $ putStrLn "File is locked! You have been added to the queue."
+      else do liftIO $ putStrLn $ "You have succesfully locked the file.\n"
                          ++ "The lock will terminate on: "
                          ++ show (timeout res')
     Left err -> liftIO $ print err
