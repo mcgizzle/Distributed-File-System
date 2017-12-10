@@ -9,8 +9,11 @@ import Control.Monad.Reader
 main :: IO ()
 main = do
  cfg <- getConfig
- putStrLn "******* Welcome to the Distributed-File-System **********"
- runReaderT console cfg
+ case cfg of
+  Left err -> print err
+  Right cfg' -> do
+    putStrLn "******* Welcome to the Distributed-File-System **********"
+    runReaderT console cfg'
 
 console :: App ()
 console = loop

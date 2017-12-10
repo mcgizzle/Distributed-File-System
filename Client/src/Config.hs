@@ -1,27 +1,29 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Config where
 
 import Control.Monad.Reader
 import Control.Monad.Except
+import Api.Config
 
-type Node = (String,Int)
+--type Node = (String,Int)
 
 data Config = Config {
   userId :: Int,
   directoryNode :: Node,
   lockingNode :: Node
-                 }
+  }
 
 type App = ReaderT Config IO 
 
-getConfig :: IO Config
+getConfig :: IO (Either String Config) 
 getConfig = do
-  return Config {
-    userId = 1,
-    directoryNode = ("localhost",8080),
-    lockingNode = ("localhost",8000)
-         }
-
+  res <- initClientServer
+  case res of
+    Right cfg -> do return $ Right $ Config {
+                          userId = 1,
+                          directoryNode = cDirServer cfg,
+                          lockingNode = cLockServer cfg
+                        }
+    Left _ -> return $ Left  "Error: could not connect to configuration server: Aborting."
 

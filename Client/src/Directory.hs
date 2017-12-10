@@ -77,11 +77,11 @@ findFile path = do
   case res of
        Right res' -> do
          let node = (fileNodeHost $ head res', fileNodePort $ head res')
-         liftIO $ Api.Query.send (getFile' (Just path)) node 
+         liftIO $ Api.Query.query (getFile' (Just path)) node 
        Left err -> return $ Left err
 
 
 sendDirectory :: ClientM a -> App (Either ServantError a)
 sendDirectory q = do
   dirNode <- asks directoryNode
-  liftIO $ Api.Query.send q dirNode
+  liftIO $ Api.Query.query q dirNode

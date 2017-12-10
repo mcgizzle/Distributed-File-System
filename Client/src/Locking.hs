@@ -41,4 +41,4 @@ unlockFile path = do
 
 sendQuery q = do
   node <- asks lockingNode
-  liftIO $ Api.Query.send q node
+  liftIO $ Api.Query.query q node
