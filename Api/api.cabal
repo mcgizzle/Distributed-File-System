@@ -15,7 +15,8 @@ extra-source-files:  README.md
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Api.Directory, Api.File, Api.Locking, Api.Query
+  exposed-modules:     Api.Directory, Api.File, Api.Locking, Api.Config ,Api.Query
+                     , Api.Models
   build-depends:       base >= 4.7 && < 5
                      , persistent
                      , persistent-template 
