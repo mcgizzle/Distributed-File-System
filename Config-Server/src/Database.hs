@@ -8,11 +8,12 @@ module Database where
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO)
 import Data.Aeson           (FromJSON, ToJSON)
+import Database.Persist.Class
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
 import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
                                        share, sqlSettings)
 import Config               
-import Api.Locking
+import Api.Config
 
 doMigrations :: SqlPersistT IO ()
 doMigrations = runMigration migrateAll

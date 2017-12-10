@@ -50,6 +50,8 @@ insertNode n host port = do
 getNode :: MonadIO m => NodeType -> MagicT m Node
 getNode n = do
   res <- runDB $ selectList [NodesType ==. n] [LimitTo 1] 
-  return (nodesHost $ entityVal $ head res, nodesPort $ entityVal $ head res)
+  case res of
+    []   -> throwError errNoNodes
+    res' -> return (nodesHost $ entityVal $ head res', nodesPort $ entityVal $ head res')
 
-
+errNoNodes = err404 { errBody = "There are no nodes present on the network. Please wait and then try again."} 
