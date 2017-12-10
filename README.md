@@ -12,12 +12,14 @@ This is the overarching repo for the the system. Each folder will contain a piec
 
  ## Locking 
  * __Complete__
+ 
+ ## Caching
+ * __Complete__
   
- ## Client Program
- * Under Construction
+ ## Client
+ * __Complete__
 
  ### Bonus: 
  * Security
- * Caching 
  * Transactions
   
