@@ -5,25 +5,34 @@ module Config where
 import Control.Monad.Reader
 import Control.Monad.Except
 import Api.Config
+import Api.File 
 
---type Node = (String,Int)
+import Data.Cache
+import Data.Time
+
+type FileCache = Cache String CachedFile
+type CachedFile = (File,UTCTime)
 
 data Config = Config {
   userId :: Int,
   directoryNode :: Node,
-  lockingNode :: Node
+  lockingNode :: Node,
+  cache :: FileCache
   }
 
 type App = ReaderT Config IO 
 
+
 getConfig :: IO (Either String Config) 
 getConfig = do
+  c <- newCache Nothing :: IO FileCache
   res <- initClientServer
   case res of
-    Right cfg -> do return $ Right $ Config {
+    Right cfg -> return $ Right Config {
                           userId = 1,
                           directoryNode = cDirServer cfg,
-                          lockingNode = cLockServer cfg
+                          lockingNode = cLockServer cfg,
+                          cache = c
                         }
     Left _ -> return $ Left  "Error: could not connect to configuration server: Aborting."
 

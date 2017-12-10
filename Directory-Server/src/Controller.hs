@@ -12,6 +12,7 @@
 
 module Controller(
 listFiles,newFile,writeFile,getFileLoc,
+checkCache,
 initFileNode
 )where
 
@@ -69,8 +70,8 @@ listFiles = do
   
 getFileLoc :: MonadIO m => Maybe FilePath -> MagicT m [FileNode]
 getFileLoc path' = do
-  let path = takeDirectory $ fromJust path'
-  let name = takeFileName path
+  let path = (takeDirectory $ fromJust path') ++ "/"
+  let name = takeFileName $ fromJust path'
   res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path
                              , M.FileInfoFile_name ==. name ] []
   case res of
@@ -106,6 +107,19 @@ newFile f = do
     Just _  -> return f'
     Nothing -> throwError errFileExists
 
+checkCache :: MonadIO m => Maybe String -> Maybe UTCTime -> MagicT m M.CacheResponse
+checkCache path' time' = do
+  res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path,
+                               M.FileInfoFile_name ==. name,
+                               M.FileInfoLast_write <=. time ] []
+  case res of 
+    Just _  -> return InDate
+    Nothing -> return OutDate
+  where
+    time = fromJust time'
+    path = takeDirectory $ fromJust path'
+    name = takeFileName $ fromJust path'
+  
 
 errFileDoesNotExist = err404 { errBody = "This file does not exits brah"}
 errFileExists = err400 { errBody = "File with this name already exists"}

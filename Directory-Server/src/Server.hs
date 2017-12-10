@@ -44,6 +44,7 @@ directoryServer = Controller.listFiles
              :<|> Controller.newFile
              :<|> Controller.writeFile
              :<|> Controller.getFileLoc
+             :<|> Controller.checkCache
              :<|> Controller.initFileNode
 
 api :: Proxy DirectoryAPI

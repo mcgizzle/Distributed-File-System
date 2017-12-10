@@ -40,6 +40,12 @@ newtype InitResponse = InitResponse {
 instance ToJSON InitResponse
 instance FromJSON InitResponse
 
+data CacheResponse = InDate | OutDate 
+  deriving(Generic)
+instance ToJSON CacheResponse
+instance FromJSON CacheResponse
+
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
     host String
@@ -59,20 +65,25 @@ FileInfo json
 directoryApi :: Proxy DirectoryAPI
 directoryApi = Proxy
 
-type DirectoryAPI = "ls"                              :> Get '[JSON] [FileInfo]
-               :<|> "new"   :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo 
-               :<|> "write" :> ReqBody '[JSON] File   :> Post '[JSON] FileInfo
-               :<|> QueryParam "path" FilePath        :> Get '[JSON] [FileNode]  
+type DirectoryAPI = 
+       "ls"                                  :> Get '[JSON] [FileInfo]
+  :<|> "new"   :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo 
+  :<|> "write" :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo
+  :<|> QueryParam "path" FilePath            :> Get '[JSON] [FileNode]  
+  :<|> "cache" :> QueryParam "path" FilePath  
+               :> QueryParam "time" UTCTime  :> Get '[JSON] CacheResponse
                -- File server init endpoint
-               :<|> "fs"    :> Capture "host" String  
-                            :> Capture "port" Int     :> Post '[JSON] InitResponse 
+  :<|> "fs"    :> Capture "host" String  
+               :> Capture "port" Int         :> Post '[JSON] InitResponse 
+
 
 
 listFiles' :: ClientM [FileInfo]
 newFile' :: File -> ClientM FileInfo
 writeFile' :: File -> ClientM FileInfo
 getFileLoc' :: Maybe String -> ClientM [FileNode]
+checkCache' :: Maybe String -> Maybe UTCTime -> ClientM CacheResponse
 initFileNode' :: String -> Int -> ClientM InitResponse
 ( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
- initFileNode' ) = client directoryApi
+  checkCache' :<|> initFileNode' ) = client directoryApi
 
