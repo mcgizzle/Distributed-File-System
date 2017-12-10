@@ -40,6 +40,7 @@ executable Locking-Server-exe
   build-depends:       base
                      , Locking-Server
                      , persistent
+                     , api
   default-language:    Haskell2010
 
 test-suite Locking-Server-test
