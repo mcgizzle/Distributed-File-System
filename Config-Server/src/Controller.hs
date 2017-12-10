@@ -10,7 +10,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 
 module Controller(
-fileConf,directoryConf,clientConf
+fileConf,directoryConf,lockingConf,clientConf
 )where
 
 import Database.Persist
@@ -25,7 +25,7 @@ import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO, lift)
 
 fileConf :: MonadIO m => String -> Int -> MagicT m FSConfig
 fileConf host port = do
-  runDB $ insert $ Nodes host port FileServer
+  insertNode FileServer host port 
   dirNode <- getNode DirectoryServer
   return $ FSConfig dirNode
 
@@ -36,14 +36,20 @@ clientConf = do
   lockNode <- getNode LockingServer
   return $ ClientConfig fileNode dirNode lockNode
 
+lockingConf :: MonadIO m => String -> Int -> MagicT m ()
+lockingConf = insertNode LockingServer 
+
 directoryConf :: MonadIO m => String -> Int -> MagicT m ()
-directoryConf host port = do
-  runDB $ insert $ Nodes host port DirectoryServer
+directoryConf = insertNode DirectoryServer
+
+insertNode :: MonadIO m => NodeType -> String -> Int -> MagicT m ()
+insertNode n host port = do
+  runDB $ insert $ Nodes host port n
   return ()
 
 getNode :: MonadIO m => NodeType -> MagicT m Node
 getNode n = do
   res <- runDB $ selectList [NodesType ==. n] [LimitTo 1] 
-  return $ (nodesHost $ entityVal $ head res, nodesPort $ entityVal $ head res)
+  return (nodesHost $ entityVal $ head res, nodesPort $ entityVal $ head res)
 
 
