@@ -59,12 +59,12 @@ configApi = Proxy
 type ConfigAPI = 
        "file-conf"   :> Capture "host" String :> Capture "port" Int :> Post '[JSON] FSConfig
   :<|> "dir-conf"    :> Capture "host" String :> Capture "port" Int :> Post '[JSON] () 
--- :<|> "lock-conf"   :> Capture "host" String :> Capture "port" Int :> Get '[JSON] Configuration      
+  :<|> "lock-conf"   :> Capture "host" String :> Capture "port" Int :> Get '[JSON] ()      
   :<|> "client-conf" :>                                                Get '[JSON] ClientConfig 
 
 fileConf' :: String -> Int -> ClientM FSConfig
 dirConf' :: String -> Int -> ClientM () 
---lockConf' :: String -> Int -> ClientM Configuration
+lockConf' :: String -> Int -> ClientM ()
 clientConf' :: ClientM ClientConfig
 --(fileConf' :<|> dirConf' :<|> lockConf' :<|> clientConf' ) = client configApi
-(fileConf' :<|> dirConf' :<|> clientConf') = client configApi
+(fileConf' :<|> dirConf' :<|> lockConf' :<|> clientConf') = client configApi
