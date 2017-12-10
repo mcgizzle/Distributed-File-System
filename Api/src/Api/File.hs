@@ -46,10 +46,3 @@ sendFile' :: File -> ClientM ServerInfo
 updateFile' :: File -> ClientM ServerInfo
 getFile' :<|> sendFile' :<|> updateFile' = client fileApi
 
-query :: Show a => ClientM a -> (String, Int) -> IO ()
-query q (host,port) = do
-  manager' <- newManager defaultManagerSettings
-  res <- runClientM q (ClientEnv manager' (BaseUrl Http host port "")) 
-  case res of
-    Left err   -> print err
-    Right res' -> print res'

@@ -76,10 +76,3 @@ initFileNode' :: String -> Int -> ClientM InitResponse
 ( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
  initFileNode' ) = client directoryApi
 
-query :: ClientM a -> (String, Int) -> IO Bool
-query q (host,port) = do
-  manager' <- newManager defaultManagerSettings
-  res <- runClientM q (ClientEnv manager' (BaseUrl Http host port "")) 
-  case res of
-    Left _  -> return False
-    Right _ -> return True

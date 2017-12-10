@@ -17,22 +17,37 @@ import Server
 import System.Environment
 import Control.Monad (unless)
 
-import Api.Directory
+import Control.Monad.Reader
 
-informNetwork :: Int -> (String,Int) -> IO ()
-informNetwork port (dirHost, dirPort) = loop
-        where loop = do 
-                resp <- query (initFileNode' "localhost" port) (dirHost,dirPort) 
-                unless resp $ loop
-                return ()
+import Config
+import Api.Directory
+import Api.Query
+import Api.Config
+
+informNetwork :: Int -> AppT ()
+informNetwork port = loop
+  where 
+    loop = do
+      (dirHost,dirPort) <- asks fsDirServer
+      resp <- liftIO $ queryBool (initFileNode' "localhost" port) (dirHost,dirPort) 
+      unless resp loop
+      return ()
+
+startServer :: Int -> AppT ()
+startServer port = do
+  informNetwork port 
+  liftIO $ putStrLn $ "Server is running on port: " ++ show port
+  informNetwork port 
+  liftIO $ putStrLn "Initialised with Directory Server"
+  liftIO $ runServer port
+
 
 main :: IO ()
 main = do
-  [port,dirHost,dirPort] <- getArgs
-  putStrLn $ "Server is running on port: " ++ port
-  informNetwork (read port) (dirHost, read dirPort)
-  putStrLn $ "Initialised with Directory Server"
-  runServer (read port)
-
-
+  [port] <- getArgs
+  res <- getConfig $ read port
+  case res of
+    Right cfg -> runReaderT (startServer $ read port) cfg
+    Left err  -> putStrLn "There was an error connecting to the Config-Server: Aborting."
+  
            

@@ -20,23 +20,28 @@ module Api.Config where
 import Servant
 import Data.Aeson           (FromJSON, ToJSON)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
-import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
-                             derivePersistField, share, sqlSettings)
+import Database.Persist.TH  (mkMigrate, mkPersist, mkDeleteCascade, 
+                             persistLowerCase,derivePersistField, 
+                             share, sqlSettings)
 import Servant.API
 import Servant.Client
 import GHC.Generics         (Generic)
 import Data.Time
 import Api.Models
+import Api.Query
 
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
+configServerInfo = ("localhost",8000)
+
+share [mkPersist sqlSettings, mkDeleteCascade sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Nodes json
     host String
     port Int
     type NodeType
-    UniqueNode host port
+    UniqueNodes host port
 |]
 
 type Node = (String,Int)
+
 
 data FSConfig = FSConfig {
   fsDirServer :: Node
@@ -62,9 +67,14 @@ type ConfigAPI =
   :<|> "lock-conf"   :> Capture "host" String :> Capture "port" Int :> Get '[JSON] ()      
   :<|> "client-conf" :>                                                Get '[JSON] ClientConfig 
 
+
 fileConf' :: String -> Int -> ClientM FSConfig
 dirConf' :: String -> Int -> ClientM () 
 lockConf' :: String -> Int -> ClientM ()
 clientConf' :: ClientM ClientConfig
---(fileConf' :<|> dirConf' :<|> lockConf' :<|> clientConf' ) = client configApi
 (fileConf' :<|> dirConf' :<|> lockConf' :<|> clientConf') = client configApi
+
+initDirServer host port  = query (dirConf' host port) configServerInfo
+initLockServer host port = query (lockConf' host port) configServerInfo
+initFileServer host port = query (fileConf' host port) configServerInfo
+initClientServer         = query clientConf' configServerInfo
