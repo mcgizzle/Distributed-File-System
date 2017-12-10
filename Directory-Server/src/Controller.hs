@@ -31,6 +31,7 @@ import Database
 
 import Api.Directory as M 
 import Api.File
+import Api.Query
 
 import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO, lift)
 
@@ -87,7 +88,7 @@ writeFile f@File{..} = do
       let nodeKeys = M.fileInfoNodes $ entityVal res'
       nodes <- mapM nodeFromKey nodeKeys
       let fileKey = entityKey res'
-      liftIO $ mapM (\n -> Api.File.query (updateFile' f)  (M.fileNodeHost n,M.fileNodePort n)) nodes
+      liftIO $ mapM (\n -> Api.Query.query (updateFile' f)  (M.fileNodeHost n,M.fileNodePort n)) nodes
       time <- liftIO getCurrentTime
       let f' = FileInfo fileName filePath time nodeKeys
       runDB $ replace fileKey f'
@@ -97,7 +98,7 @@ writeFile f@File{..} = do
 newFile :: MonadIO m => File -> MagicT m M.FileInfo
 newFile f = do
   (nodes,keys) <- getAvailableNodes
-  liftIO $ mapM_ (\n -> Api.File.query (sendFile' f) (M.fileNodeHost n,M.fileNodePort n)) nodes
+  liftIO $ mapM_ (\n -> Api.Query.query (sendFile' f) (M.fileNodeHost n,M.fileNodePort n)) nodes
   time <- liftIO getCurrentTime
   let f' = FileInfo (fileName f) (filePath f) time keys
   res <- runDB $ insertUnique f'

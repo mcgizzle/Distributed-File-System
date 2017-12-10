@@ -51,6 +51,7 @@ executable Directory-Server-exe
   build-depends:       base
                      , Directory-Server
                      , servant
+                     , api
                      , persistent
   default-language:    Haskell2010
 
