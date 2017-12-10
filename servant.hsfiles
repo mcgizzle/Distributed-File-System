@@ -169,7 +169,7 @@ import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
 import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
                                        share, sqlSettings)
 import Config               
-import Api.Locking
+import Api.{{name}}
 
 doMigrations :: SqlPersistT IO ()
 doMigrations = runMigration migrateAll
