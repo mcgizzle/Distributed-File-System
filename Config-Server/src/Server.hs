@@ -38,6 +38,7 @@ convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
 configServer :: MonadIO m => ServerT ConfigAPI (MagicT m)
 configServer = Controller.fileConf
+          :<|> Controller.directoryConf
           :<|> Controller.clientConf
 
 api :: Proxy ConfigAPI

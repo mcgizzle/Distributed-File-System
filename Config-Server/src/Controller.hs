@@ -10,7 +10,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 
 module Controller(
-fileConf,clientConf
+fileConf,directoryConf,clientConf
 )where
 
 import Database.Persist
@@ -35,6 +35,11 @@ clientConf = do
   dirNode <- getNode DirectoryServer
   lockNode <- getNode LockingServer
   return $ ClientConfig fileNode dirNode lockNode
+
+directoryConf :: MonadIO m => String -> Int -> MagicT m ()
+directoryConf host port = do
+  runDB $ insert $ Nodes host port DirectoryServer
+  return ()
 
 getNode :: MonadIO m => NodeType -> MagicT m Node
 getNode n = do
