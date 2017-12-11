@@ -1,0 +1,9 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- .
+- ../Api
+extra-deps:
+- servant-auth-0.3.0.1
+- servant-auth-server-0.3.1.0
+resolver: lts-9.17
