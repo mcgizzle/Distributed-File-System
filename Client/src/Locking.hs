@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-} 
 module Locking where
 import Control.Monad.Reader
+import Control.Monad.Except
 
 import Api.Query
 import Api.Locking
@@ -9,36 +10,27 @@ import Config
 
 import Data.Maybe (fromJust)
 
-lockingServer = ("localhost",9000)
+checkLock :: FilePath -> AppT () 
+checkLock path = sendQuery (checkLock' (Just path)) "Uh oh! Looks like the file is locked." >> return ()
 
-checkLock :: FilePath -> App Bool
-checkLock path = do
-  res <- sendQuery (checkLock' (Just path))
-  case res of
-    Left _ -> return False
-    Right _ -> return True
-
-lockFile :: FilePath -> App ()
+lockFile :: FilePath -> AppT ()
 lockFile path = do
   id <- asks userId
-  res <- sendQuery (lockFile' id (Just path))
-  case res of
-    Right res' -> do
-      if (not (locked res')) then liftIO $ putStrLn "File is locked! You have been added to the queue."
-      else do liftIO $ putStrLn $ "You have succesfully locked the file.\n"
+  res <- sendQuery (lockFile' id (Just path)) "File is locked! you have been added to the queue."
+  liftIO $ putStrLn $ "You have succesfully locked the file.\n"
                          ++ "The lock will terminate on: "
-                         ++ show (timeout res')
-    Left err -> liftIO $ print err
+                         ++ show (timeout res)
 
-unlockFile :: FilePath -> App ()
+unlockFile :: FilePath -> AppT ()
 unlockFile path = do
   id <- asks userId
-  res <- sendQuery (unlockFile' id (Just path))
-  case res of
-    Right _  -> liftIO $ putStrLn "The file has been unlocked."
-    Left err -> liftIO $ print err
+  sendQuery (unlockFile' id (Just path)) "Looks like you dont have a lock on this file."
+  liftIO $ putStrLn "The file has been unlocked."
 
 
-sendQuery q = do
+sendQuery q err = do
   node <- asks lockingNode
-  liftIO $ Api.Query.query q node
+  res <- liftIO $ Api.Query.query q node
+  case res of
+    Left  _ -> throwError $ Error err
+    Right res -> return res

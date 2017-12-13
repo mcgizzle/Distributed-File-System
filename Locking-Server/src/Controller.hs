@@ -22,6 +22,7 @@ import Database
 import Data.List as DL
 import Data.Maybe (fromJust,isJust)
 import Control.Monad.Reader (when, MonadIO, MonadReader, asks, liftIO, lift)
+import Control.Monad
 
 import Data.Time
 import Data.Time.Clock
@@ -32,14 +33,24 @@ unlockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m ()
 unlockFile id path' = do
   let path = fromJust path'
   liftIO $ putStrLn $ "Unlocking file: " ++ path
+  res <- runDB $ isTopOfQueue id path  
+  unless res $ throwError errUserNotTopOfQueue
   updateQueue (flip DL.delete) path id
-  return ()
+  return () 
+
+isTopOfQueue id path = do
+  res <- selectFirst [ M.LockQueueFilePath ==. path ] []
+  let q = lockQueueQueue $ entityVal $ fromJust res
+  if (head q == id) then return True 
+  else return False
+
 
 lockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m M.LockInfo
 lockFile id path' = do
   let path = fromJust path'
   gotLock <- isAvailable id path
-  if (not gotLock) then do
+  liftIO $ putStrLn $ "Attempting to lock file -> " ++ show gotLock
+  if (not gotLock)  then do
     inQueue <- checkQueued path id
     if inQueue then throwError errUserInQueue
     else do
@@ -64,10 +75,11 @@ isAvailable id path = do
     now <- liftIO $ getCurrentTime
     locked <- selectFirst [ M.LockQueueFilePath ==. path,
                             M.LockQueueQueue    !=. []   ] []
+
     inDate <- selectFirst [ M.LockQueueFilePath ==. path
                                    , M.LockQueueTimeout <. now ] [] 
     case (isJust locked,isJust inDate) of
-         (True,True)  -> return False
+         (True,True)  -> isTopOfQueue id path
          (True,False) -> nextInQueue path id
          _            -> return True
   return res
@@ -88,6 +100,7 @@ checkQueued path id = do
   res <- runDB $ selectFirst [M.LockQueueFilePath ==. path] []
   return $ DL.elem id $ lockQueueQueue $ entityVal $ fromJust res
 
+
 updateQueue :: MonadIO m => ([Int] -> t -> [Int]) -> FilePath -> t -> MagicT m ()
 updateQueue f path id = runDB $ do
   res <- selectFirst [ M.LockQueueFilePath ==. path ] []
@@ -96,3 +109,5 @@ updateQueue f path id = runDB $ do
 
 errUserInQueue = err400 { errBody = "User is already in the queue, will be notified when the resource becomes available"}
 errNoLock = err404 { errBody = "User does not have a lock on this file"}
+errIsLocked = err404 { errBody = "This file is already locked"}
+errUserNotTopOfQueue = err404 { errBody = "User is not at the top of the queue."}

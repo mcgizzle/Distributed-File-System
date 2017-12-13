@@ -20,7 +20,10 @@ data Config = Config {
   cache :: FileCache
   }
 
-type App = ReaderT Config IO 
+data ServerErr = Error String
+  deriving Show
+type AppT = ReaderT Config (ExceptT ServerErr IO)
+
 
 
 getConfig :: IO (Either String Config) 

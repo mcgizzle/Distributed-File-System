@@ -5,6 +5,7 @@ import Locking
 import Config
 
 import Control.Monad.Reader
+import Control.Monad.Except
 
 main :: IO ()
 main = do
@@ -13,9 +14,16 @@ main = do
   Left err -> print err
   Right cfg' -> do
     putStrLn "******* Welcome to the Distributed-File-System **********"
-    runReaderT console cfg'
-
-console :: App ()
+    loop
+    return ()
+    where 
+      loop = do
+        e <- runExceptT (runReaderT console cfg')
+        case e of
+          Left err -> print err
+          Right _ -> print "OK!"
+        loop
+console :: AppT ()
 console = loop
  where 
    loop = do
