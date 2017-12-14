@@ -43,13 +43,16 @@ The purpose of the _Configuration Server_ is manage the network and help maintai
    * Cache files 
    
 This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
+ 
+Through the use of the __locking server__ clients have unique access when writing a file (among other abilities discussed below).
 
-When a *file server* comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
-The *file server* then repeatedly makes calls to the directory server until it recevives a positive reponse, informing it that the directory server is aware of its presence.
+Caching ensures that unnesecary transfers of large files do not take place.
  
-Through the use of the __locking server__ clients have unique access when writing a file. No other client can write to this file during the editing process. Once the client saves the file, the lock is released and others can access the write to the file. All of this functionality is hidden from the client to provide a smooth interaction.
- 
-The File Servers (which store the files) can be viewed as somewhat dumb nodes. Their functionality is mostly managed by other servers. File Servers simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
+The File Servers (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. File Servers simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
+
+When a __file server__ comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
+The __file server__ then repeatedly makes calls to the directory server until it recevives a positive reponse, informing it that the directory server is aware of its presence.
+
 The interaction with this functionality is discussed in more detail in the [Client]() section below.
 
  ## Directory Server
@@ -76,9 +79,13 @@ In a _distributed system_ it is to be assumed there will be downtime for certain
 When a client requests a file they receive a list of available nodes which contain the file. This information is temporarily stored by the client. The client then makes a request to one of theses nodes, if the node is down or takes too long to reply, the client simply tries another of the nodes. 
  
  ## Caching
-In a distributed system caching is a difficult topic. This system takes the approach that clients will most likely be accessing the same, yet very large, files and therefore acts accordingly.
+In a distributed system caching is a difficult topic. This system takes the approach that clients will most likely be accessing the same, yet very large, files and therefore acts accordingly. The client is also designed to be light-weight, and thus has no endpoints of its own.
 
-After creating a new file or writing to an existing, the client saves the files contents to the cache. A _last-write_ field is maintained by the directory server.
+After creating a new file or writing to an existing, the client saves the files contents to the cache along with a time of write. A _last-write_ field for every file is also maintained by the directory server. 
+
+Before a client requests a file from a file server checks its cache for the file. If the file is there, then the client simply asks the directory server whether its version is in date. The directory server responds appropriately.
+
+This implementation allows the client to be an extremely light-weight service. 
   
  ## Client
  * __Complete__
