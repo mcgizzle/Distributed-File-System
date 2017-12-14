@@ -25,7 +25,7 @@ I have included a _distributed-file-system.hsfiles_ in the source. This file is 
 #### Api
 The project was built with [Servant](). This is a fantastic tool for building type-safe Api's and I cannot recommend it enough. I have refactored out the code for each of the servers _Api's_ into an [Api Package]() (which in itself is a Stack project). This allows the _Api_ to be imported as a package from a GitHub repository and ensure a common _Api_ accross all of the servers. The servers pull in the Api's from a certain commit, so therefore changes to the _Api_ can be made and tested without affecting the current running of the system. This allows the servers to easily interact with eachothers endpoints.
 
-The *Api* package provides simple Haskell interface for interacting with the system.
+Most importantly, the *Api* package provides simple Haskell interface for interacting with the system.
 
 #### Database
 I chose to use [PostgreSQL]() with [Persistent]() for my data store. These two tools used togther create a very simple and reliable way to manage and maintain databases. The migrations are taken care behind the scenes and PostgreSQL ensures that all my [ACID]() requirements were satisfied.
@@ -43,7 +43,6 @@ The purpose of the _Configuration Server_ is manage the network and help maintai
    * Read files
    * Write to existing files (exclusively)
    * Create directories
-   * Cache files 
    
 This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
  
@@ -55,6 +54,12 @@ The File Servers (which store the files) can be viewed as somewhat dumb nodes.Th
 
 When a __file server__ comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
 The __file server__ then repeatedly makes calls to the directory server until it recevives a positive reponse, informing it that the directory server is aware of its presence.
+
+Links to the source:
+
+[Api and Models]()
+ 
+[Controller]()
 
 The interaction with this functionality is discussed in more detail in the [Client]() section below.
 
@@ -72,7 +77,9 @@ The interaction with this functionality is discussed in more detail in the [Clie
     1. Send the files contents for read-only access.
   
  Links to the source:
+ 
  [Api and Models]()
+ 
  [Controller]()
  
   ## Locking Server
@@ -81,7 +88,9 @@ The interaction with this functionality is discussed in more detail in the [Clie
  Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatyedly working on the same files to lock these and ensure the they can only be edited by themselves. There is also a timeout function on this locking to prevent indefinite locking.
  
  Links to the source:
+ 
  [Api and Models]()
+ 
  [Controller]()
  
  ## Replication
@@ -102,7 +111,7 @@ This implementation allows the client to be an extremely light-weight service an
 
   
  ## Client
-The functionality of the system can imported into projects through the Api package provided. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
+The functionality of the system can imported into projects through the provided Api package. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
 
  * Reading Files
  * Creating Directories
@@ -111,8 +120,4 @@ The functionality of the system can imported into projects through the Api packa
  * Caching
  * Authentication
  
- 
- ### Bonus: 
- * Security
- * Transactions
   
