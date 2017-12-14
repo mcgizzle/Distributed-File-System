@@ -25,8 +25,11 @@ I have included a _distributed-file-system.hsfiles_ in the source. This file is 
 #### Api
 The project was built with [Servant](). This is a fantastic tool for building type-safe Api's and I cannot recommend it enough. I have refactored out the code for each of the servers _Api's_ into an [Api Package]() (which in itself is a Stack project). This allows the _Api_ to be imported as a package from a GitHub repository and ensure a common _Api_ accross all of the servers. The servers pull in the Api's from a certain commit, so therefore changes to the _Api_ can be made and tested without affecting the current running of the system. This allows the servers to easily interact with eachothers endpoints.
 
+The *Api* package provides simple Haskell interface for interacting with the system.
+
 #### Database
 I chose to use [PostgreSQL]() with [Persistent]() for my data store. These two tools used togther create a very simple and reliable way to manage and maintain databases. The migrations are taken care behind the scenes and PostgreSQL ensures that all my [ACID]() requirements were satisfied.
+The use of these tools ensures that the system is persisted. When the system is shut-down and restarted the same information will remain available.
 
 #### Configuration
 As mentioned above, I also chose to create a _Configuration Server_ for managing the system as a whole. The location of this server is stored in the Api package and is thus known to each of the other servers. 
@@ -56,7 +59,7 @@ The __file server__ then repeatedly makes calls to the directory server until it
 The interaction with this functionality is discussed in more detail in the [Client]() section below.
 
  ## Directory Server
- The **Directory Server** keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **Directory Server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
+ The __directory server__ keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **directory server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
  
  *New Files*
     1. Check whether the requested filepath is available
@@ -67,11 +70,19 @@ The interaction with this functionality is discussed in more detail in the [Clie
  
  *Reading Files*
     1. Send the files contents for read-only access.
+  
+ Links to the source:
+ [Api and Models]()
+ [Controller]()
  
   ## Locking Server
- The system ensures that a client has exclusive access when writing a file by using a locking server to maintain a database of currently locked files. This prevents write conflicts from happening. To ensure a file is not locked indefintely, there is also a timeout.
+ The system ensures that a client has exclusive access when writing a file by using a __locking server__ to maintain a database of currently locked files. This prevents write conflicts from happening. To ensure a file is not locked indefintely, there is also a timeout.
  
- Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories, outside of just the read and write. This allows clients who are repeatyedly working on the same files to lock these and ensure the they can only be edited by themselves. There is also a timeout function on this.
+ Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatyedly working on the same files to lock these and ensure the they can only be edited by themselves. There is also a timeout function on this locking to prevent indefinite locking.
+ 
+ Links to the source:
+ [Api and Models]()
+ [Controller]()
  
  ## Replication
 In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication on files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. An implementation of the _Least Recently Used_ algorithm maintains a balance accross the system.
@@ -85,11 +96,22 @@ After creating a new file or writing to an existing, the client saves the files 
 
 Before a client requests a file from a file server checks its cache for the file. If the file is there, then the client simply asks the directory server whether its version is in date. The directory server responds appropriately.
 
-This implementation allows the client to be an extremely light-weight service. 
+This implementation allows the client to be an extremely light-weight service and prevents the unnesecary transfer of unaltered files. 
+  
+## Authentication  
+
   
  ## Client
- * __Complete__
+The functionality of the system can imported into projects through the Api package provided. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
 
+ * Reading Files
+ * Creating Directories
+ * Writing Files (Through the use of a text editor)
+ * Locking Files/Directories
+ * Caching
+ * Authentication
+ 
+ 
  ### Bonus: 
  * Security
  * Transactions
