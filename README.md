@@ -63,7 +63,7 @@ Caching ensures that unnesecary transfers of large files do not take place.
 The __file servers__ (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. __File servers__ simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
 
 When a __file server__ comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
-The __file server__ then repeatedly makes calls to the directory server until it recevives a positive reponse, informing it that the directory server is aware of its presence.
+The __file server__ then places itself in a loop, constantly making calls to its designated file server(s) until it receives an acknowledgement, informing it that the directory server is aware of its presence.
 
 Links to the source:
 
