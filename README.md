@@ -20,7 +20,7 @@ I chose to implement the following functionalities:
  
  ### System Overview
  In order for the system to be trully distributed, each server is its own self contained [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) project that can be built and run independently from the rest of the system.
- This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole.
+ This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole. This allows for funcionality to be added easily and quickly.
  
 I have included a [_distributed-file-system.hsfiles_](https://github.com/McGizzle/Distributed-File-System/blob/master/servant.hsfiles) in the source. This file is a [stack template](https://github.com/commercialhaskell/stack-templates) which generate the boiler plate for the server code that is used in each of the projects. This file allows for rapid and reliable development of further functionality.
 
