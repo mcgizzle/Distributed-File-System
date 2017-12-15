@@ -73,22 +73,23 @@ The interaction with this functionality is discussed in more detail in the [Clie
  ## Directory Server
  The __directory server__ keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **directory server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
  
- *List Files*
+ **List Files**
  
-    1. List all currently available files on the system.
+    List all currently available files on the system.
    
- *New Files*
+ **New Files**
  
-    1. Check whether the requested filepath is available
-    2. If the filepath is available, insert the new file and save it to the appropriate nodes (discussed in replication)
+    Check whether the requested filepath is available
+    
+    If the filepath is available, insert the new file and save it to the appropriate nodes (discussed in replication)
  
- *Writing Files*
+ **Writing Files**
  
-    1. Request an update to the appropriate file nodes
+    Update all of the appropriate file nodes.
  
- *Reading Files*
+ **Reading Files**
  
-    1. Send the files contents for read-only access.
+    Send the files location (on potentially numerous nodes).
   
  Links to the source:
  
