@@ -16,11 +16,11 @@ I chose to implement the following functionalities:
  
  Below I discuss in detail the inner workings of each part of the system. 
  
- Building & Running is discussed [here](#buildAndrun)
+ Building & Running is discussed [here](#buildAndrun).
  
  ### System Overview
  In order for the system to be trully distributed, each server is its own self contained [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) project that can be built and run independently from the rest of the system.
- This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole. This allows for funcionality to be added easily and quickly.
+ This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole. This also allows for funcionality to be added easily and quickly, as the entire system is modular.
  
 I have included a [_distributed-file-system.hsfiles_](https://github.com/McGizzle/Distributed-File-System/blob/master/servant.hsfiles) in the source. This file is a [stack template](https://github.com/commercialhaskell/stack-templates) which generate the boiler plate for the server code that is used in each of the projects. This file allows for rapid and reliable development of further functionality.
 
@@ -159,7 +159,7 @@ If a client is currently offline, then the server makes note, and notifies the c
 This version requires a more cumbersome client side application. However, it can reduce load to the system as no requests are made to the system to check whether the cache is valid.
 
   
- ## Client
+## Client
 The functionality of the system can imported into projects through the provided Api package. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
   
   
@@ -201,3 +201,7 @@ The functionality of the system can imported into projects through the provided 
   
   `stack exec Client`
   
+
+## Authentication
+
+Unfortunately, due to time constraints, I did not get to fully implement authentication. I have left the code that I had so far written as an example of how I planned on proceeding. The system would have implmented a token based Api, with each client being assigned a token with a timeout parameter upon startup. 
