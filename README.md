@@ -9,7 +9,6 @@ I chose to implement the following functionalities:
  * __Locking Server__
  * __Replication__
  * __Caching__
- * __Authentication__
  
  As an extra I also implented 
  * __Configuration Server__
@@ -50,6 +49,7 @@ Links to the source:
    * Read Files
    * Write to Existing Files (exclusively)
    * Create Directories
+   * Delete Files/Directories 
    
 This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
  
@@ -90,6 +90,12 @@ The interaction with this functionality is discussed in more detail in the [Clie
  **Reading Files**
  
     Send the files location (on potentially numerous nodes).
+  
+ **Delete Files**
+    
+    Check whether the file exists
+    
+    Propogate the deletion accross all nodes which store the file
   
  Links to the source:
  
@@ -143,8 +149,6 @@ In this approach to caching, the directory server maintains a list of clients wh
 If a client is currently offline, then the server makes note, and notifies the client on startup.
 
 This version requires a more cumbersome client side application. However, it can reduce load to the system as no requests are made to the system to check whether the cache is valid.
-  
-## Authentication  
 
   
  ## Client
@@ -154,8 +158,8 @@ The functionality of the system can imported into projects through the provided 
  * Reading Files
  * Creating Directories
  * Writing Files (Through the use of a text editor)
+ * Deletion
  * Locking Files/Directories
  * Caching
- * Authentication
  
   
