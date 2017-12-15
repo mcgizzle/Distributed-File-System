@@ -183,7 +183,8 @@ The functionality of the system can imported into projects through the provided 
  
   ## Building & Running <a name="buildAndrun"></a>
   
-  **Each server must be built**
+  **Each server must be built using**
+  
   `stack build`
   
   **Run the servers**
