@@ -12,7 +12,7 @@
 
 module Controller(
 listFiles,newFile,writeFile,getFileLoc,
-checkCache,
+checkCache,newFileC,writeFileC,
 initFileNode
 )where
 
@@ -119,7 +119,20 @@ checkCache path' time' = do
     time = fromJust time'
     path = takeDirectory $ fromJust path'
     name = takeFileName $ fromJust path'
-  
+
+newFileC :: MonadIO m => String -> Int -> File -> MagicT m FileInfo
+newFileC host port file@File{..} = do
+  res <- runDB $ insert $ FileCache filePath (host,port)
+  newFile file
+
+writeFileC :: MonadIO m => String -> Int -> File -> MagicT m FileInfo
+writeFileC host port file@File{..} = do
+  runDB $ do
+    res <- selectList [M.FileCacheFile_path ==. filePath ] []
+    insert $ FileCache filePath (host,port)
+    mapM_ delete (map entityKey res)
+    liftIO $ mapM_ (\n -> Api.Query.query (sendFile' file) n) (map  (fileCacheClient . entityVal) res)
+  writeFile file
 
 errFileDoesNotExist = err404 { errBody = "This file does not exits brah"}
 errFileExists = err400 { errBody = "File with this name already exists"}
