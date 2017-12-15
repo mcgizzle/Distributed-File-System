@@ -45,6 +45,7 @@ data CacheResponse = InDate | OutDate
 instance ToJSON CacheResponse
 instance FromJSON CacheResponse
 
+type Clients = (String,Int)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 FileNode json
@@ -60,7 +61,13 @@ FileInfo json
     nodes [FileNodeId]
     UniqueFile file_path file_name
     deriving Show
+FileCache json
+    file_path String
+    client Clients
 |]
+
+
+
 
 directoryApi :: Proxy DirectoryAPI
 directoryApi = Proxy
@@ -75,7 +82,12 @@ type DirectoryAPI =
                -- File server init endpoint
   :<|> "fs"    :> Capture "host" String  
                :> Capture "port" Int         :> Post '[JSON] InitResponse 
-
+  :<|> "new"   :> Capture "host" String  
+               :> Capture "port" Int   
+               :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo 
+  :<|> "write" :> Capture "host" String  
+               :> Capture "port" Int   
+               :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo
 
 
 listFiles' :: ClientM [FileInfo]
@@ -84,6 +96,10 @@ writeFile' :: File -> ClientM FileInfo
 getFileLoc' :: Maybe String -> ClientM [FileNode]
 checkCache' :: Maybe String -> Maybe UTCTime -> ClientM CacheResponse
 initFileNode' :: String -> Int -> ClientM InitResponse
+-- Caching Version 2 endpoints
+newFile'' :: String -> Int -> File -> ClientM FileInfo
+writeFile'' :: String -> Int -> File -> ClientM FileInfo
 ( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
-  checkCache' :<|> initFileNode' ) = client directoryApi
+  checkCache' :<|> initFileNode' :<|> 
+  newFile'' :<|> writeFile'' ) = client directoryApi
 
