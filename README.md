@@ -25,14 +25,14 @@ I have included a [_distributed-file-system.hsfiles_](https://github.com/McGizzl
 #### Api
 The project was built with [Servant](https://haskell-servant.readthedocs.io/en/stable/). This is a fantastic tool for building type-safe Api's and I cannot recommend it enough. I have refactored out the code for each of the servers _Api's_ into an [Api Package](https://github.com/McGizzle/Distributed-File-System/tree/master/Api) (which in itself is a stack project). This allows the _Api_ (ie. the functionality of the system) to be imported as a package from a GitHub repository and ensure a common _Api_ accross all of the servers. The servers pull in the package from a certain commit, so therefore changes to the _Api_ can be made and tested without affecting the current running of the system. This allows the servers to easily interact with eachothers endpoints.
 
-Most importantly, the *Api* package provides simple Haskell interface for interacting with the system.
+Most importantly, the *Api* package provides simple a Haskell interface for interacting with the system.
 
 #### Database
-I chose to use [PostgreSQL](https://www.postgresql.org/) with [Persistent](https://hackage.haskell.org/package/persistent) for my data store. These two tools used togther create a very simple and reliable way to manage and maintain databases. The migrations are taken care behind the scenes and PostgreSQL ensures that all my [ACID](https://en.wikipedia.org/wiki/ACID) requirements were satisfied.
+I chose to use [PostgreSQL](https://www.postgresql.org/) with [Persistent](https://hackage.haskell.org/package/persistent) as my data store. These two tools used togther create a very smooth and reliable way to manage and maintain a database. The migrations are taken care behind the scenes  with a few lines of code and PostgreSQL ensures that all my [ACID](https://en.wikipedia.org/wiki/ACID) requirements are satisfied. 
 The use of these tools ensures that the system is persisted. When the system is shut-down and restarted the same information will remain available.
 
 #### Configuration
-As mentioned above, I also chose to create a _Configuration Server_ for managing the system as a whole. The location of this server is stored in the Api package and is thus known to each of the other servers. 
+As mentioned above, I also chose to create a _Configuration Server_ for managing the system as a whole. The location (host and port) of this server is stored in the Api package and is thus known to each of the other servers. 
 The purpose of the _Configuration Server_ is manage the network and help maintain the distributed nature. Rather than each server being pre-loaded with an arbritary configuration, on start-up each of the servers make a call to the _Configuration Server_ which reponds with the relevant configuration.
 
 Links to the source:
@@ -52,15 +52,15 @@ Links to the source:
    * Create Directories
    * Delete Files/Directories 
 
-For editing the files I have displayed how the functionality could easily expanded by opening the file in a simple text editor. When the client chooses to write to a file, it is opened up in a text editor and on save, the file is sent for update.
+As an example of how the functionality could be extended. I have provided a simple text editor for editing files with the client program. When the client chooses to write to a file, it is opened up in the text editor and on save, the file is sent for update.
    
-This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
+The functionality of theis part of the system is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
  
 Through the use of the __locking server__ clients have unique access when writing a file (among other abilities discussed below).
 
 Caching ensures that unnesecary transfers of large files do not take place.
  
-The __file servers__ (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. __File servers__ simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
+The __file servers__ (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. __File servers__ simply provide endpoints for writing and reading files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely. The system was built with a layered approach.
 
 When a __file server__ comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
 The __file server__ then places itself in a loop, constantly making calls to its designated file server(s) until it receives an acknowledgement, informing it that the directory server is aware of its presence.
@@ -71,7 +71,7 @@ Links to the source:
  
 [Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/File-Server/src/Server.hs)
 
-The interaction with this functionality is discussed in more detail in the [Client]() section below.
+The interaction with this functionality is discussed in more detail in the Client section below.
 
  ## Directory Server
  The __directory server__ keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **directory server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
@@ -107,12 +107,16 @@ The interaction with this functionality is discussed in more detail in the [Clie
  [Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/Directory-Server/src/Controller.hs)
  
   ## Locking Server
- The system ensures that a client has exclusive access when writing a file by using a __locking server__ to maintain a database of currently locked files. This prevents write conflicts from happening. To ensure a file is not locked indefintely, there is also a timeout.
+ The system ensures that a client has exclusive access when writing a file by using a __locking server__ to maintain a database of currently locked files. This prevents write conflicts from happening.
+
+When a client requests write-access, behind the scenes the file is locked, it is also automatically unlocked upon the subsequent write.
  
- Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatedly working on the same files to lock these and ensure the they can only be edited by themselves.
+ To ensure a file is not locked indefintely, there is also a timeout. When a client first locks a file the timeout is started. If the lock is not renewed or released before the timeout, then the file will become available to the network again. 
+ 
+ Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatedly working on the same files to lock these and ensure the they can only be edited by themselves. Of course there is also a timeout for this feature.
 
 As an extended implementation I set up a FIFO queue within the __locking server__. 
-When a client requests a file that is already locked they are added to a FIFO queue by the locking server. Access to the resource will be released through this FIFO queue. There is timeout implemented in which the user next in the queue must make an access to the file before they loose their place. 
+When a client requests a file that is already locked they are added to a FIFO queue by the locking server. Access to the resource will be released through this FIFO queue. There is timeout implemented in which the user next in the queue must make an access to the file before they loose their place.  
 
  
  Links to the source:
@@ -122,8 +126,7 @@ When a client requests a file that is already locked they are added to a FIFO qu
  [Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/Locking-Server/src/Controller.hs)
  
  ## Replication
-In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication on files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. 
-
+In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication of files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. 
 
 An implementation of the _Least Recently Used_ algorithm maintains a balance accross the system. The directory server manages this by storing the information in a database and updating it with each write to the various file nodes.
 
@@ -146,7 +149,7 @@ This implementation allows the client to be an extremely light-weight service an
 
 __2. Server informs the client__
 
-The system takes the viewpoint that the load will be heavy and many clients will simply be reading rather than writing files.
+The system takes the viewpoint that the load on the directory server will be heavy and many clients will simply be reading rather than writing files.
 
 In this approach to caching, the directory server maintains a list of clients who have cached files. When a write is made to a file, the server invalidates all of the clients caches.
 If a client is currently offline, then the server makes note, and notifies the client on startup.
@@ -156,8 +159,19 @@ This version requires a more cumbersome client side application. However, it can
   
  ## Client
 The functionality of the system can imported into projects through the provided Api package. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
-
- * List Files
+ 
+ 
+  Operation | Command 
+  ---|--- 
+  List Files  | `ls` 
+  Read File   | `read <file path>`
+  Create File | `new <file name> <file path>`
+  Write File  | `write <file path>`
+  Delete File | `delete <file path>`
+  Lock File   | `lock <file path>`
+  Unlock File | `unlock <file path>`
+  Caching     | Done behind the scenes
+ 
  * Reading Files
  * Creating Directories
  * Writing Files (Through the use of a text editor)
