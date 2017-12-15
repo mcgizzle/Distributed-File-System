@@ -20,7 +20,6 @@ library
                      , transformers
                      , monad-logger
                      , time
-                     , servant-auth-server
   default-language:    Haskell2010
 
 executable Auth-Server

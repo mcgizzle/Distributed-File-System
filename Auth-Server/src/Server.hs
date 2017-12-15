@@ -1,5 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
+
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
@@ -21,9 +24,13 @@ import Network.Wai.Handler.Warp hiding (FileInfo)
 import Servant
 import Control.Category     ((<<<), (>>>))
 
+import Servant.API.Auth.Token
+import Servant.Server
+import Servant.Server.Auth.Token
+
 import Config
 import Controller
-import Api.Auth
+
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (authApp cfg)
@@ -32,17 +39,18 @@ authApp :: Config -> Application
 authApp cfg = serve api (magicToServer cfg)
 
 magicToServer :: Config -> Server AuthAPI
-magicToServer cfg = enter (convertMagic cfg >>> NT Handler) authServer
+magicToServer cfg = enter (convertMagic cfg >>> NT Handler) AuthServer
 
 convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
---server :: CookieSettings -> JWTSettings -> Server (API auths)
---server cs jwts = protected :<|> unprotected cs jwts
-
 authServer :: MonadIO m => ServerT AuthAPI (MagicT m)
-authServer = Controller.protected 
-        :<|> Controller.unprotected 
+authServer = testEndpoint
 
 api :: Proxy AuthAPI
 api = Proxy
 
+
+testEndpoint :: MToken' '["test-permission"] -> MagicT ()
+testEndpoint token = do
+  runAuth $ guardAuthToken token
+  return ()

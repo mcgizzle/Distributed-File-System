@@ -20,11 +20,12 @@ import Control.Monad.Except        (ExceptT, MonadError)
 import Database.Persist
 import Database.Persist.Postgresql (ConnectionPool, ConnectionString,
                                     createPostgresqlPool)
-import Servant                    
+import Servant                     (ServantErr)
 import System.Environment          (lookupEnv)
 
-import Servant.Auth.Server
-import Servant.Auth.Server.SetCookieOrphan ()
+import Servant.API.Auth.Token
+import Servant.Server
+import Servant.Server.Auth.Token
 
 -- Magic Monad Stuff -----------------------------------------------
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
@@ -43,9 +44,7 @@ type Magic = MagicT IO
 data Config = Config {
   environment :: Environment,
   pool        :: ConnectionPool,
-  jwtContext  :: Context '[CookieSettings, JWTSettings],
-  cookieSets  :: CookieSettings,
-  jwtSets     :: JWTSettings
+  authConfig  :: String
 }
 
 data Environment = Development
@@ -54,18 +53,33 @@ data Environment = Development
                  deriving(Show,Eq,Read)
 -------------------------------------------------------------
 
+-- | Lift servant monad to server monad
+liftHandler :: Handler a -> MagicT a
+liftHandler = MagicT . lift . lift
+
+-- | Special monad for authorisation actions
+newtype AuthM a = AuthM { unAuthM :: PersistentBackendT IO a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError ServantErr, HasStorage, HasAuthConfig)
+--
+runAuth :: AuthM a -> ServerM a
+runAuth m = do
+  cfg <- asks authConfig
+  pool <- asks pool
+  liftHandler $ ExceptT $ runPersistentBackendT cfg pool $ unAuthM m
+
+
 --- Environment Setup ---------------------------------------
 getConfig :: IO Config
 getConfig = do
   env <- getEnv
   p <- makePool env
-  (c,jwt) <- getAuth
+  let auth = defaultAuthConfig
+  flip runSqlPool pool $ runMigration S.migrateAllAuth
+  runPersistentBackendT authConfig pool $ ensureAdmin 17 "root" "root" "root@localhost"
   return Config {
             environment = env,
             pool = p,
-            jwtContext = c,
-            cookieSets = defaultCookieSettings,
-            jwtSets = jwt
+            authConfig = auth
           }
 
 getEnv :: IO Environment
@@ -94,11 +108,4 @@ getPoolSize :: Environment -> Int
 getPoolSize Development = 1
 getPoolSize Test = 1
 getPoolSize Production = 1
-
-getAuth :: IO (Context '[CookieSettings, JWTSettings], JWTSettings)
-getAuth = do
-  key <- generateKey
-  let jwtCfg = defaultJWTSettings key
-  let cfg = defaultCookieSettings :. jwtCfg :. EmptyContext
-  return (cfg,jwtCfg)
 --------------------------------------------------------------
