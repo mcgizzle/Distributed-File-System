@@ -39,10 +39,11 @@ The purpose of the _Configuration Server_ is manage the network and help maintai
  ## Distributed Transparent File Access
  This is the most basic need of a *distributed file system*. I chose to implement a variant of the NFS file system. Clients have the ability to:
    
-   * Create files
-   * Read files
-   * Write to existing files (exclusively)
-   * Create directories
+   * List Files
+   * Create Files
+   * Read Files
+   * Write to Existing Files (exclusively)
+   * Create Directories
    
 This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
  
@@ -50,7 +51,7 @@ Through the use of the __locking server__ clients have unique access when writin
 
 Caching ensures that unnesecary transfers of large files do not take place.
  
-The File Servers (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. File Servers simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
+The __file servers__ (which store the files) can be viewed as somewhat dumb nodes.Their functionality is mostly managed by other servers. __File servers__ simply provide endpoints for writing and getting files. For example, the logic behind their load balancing is managed elsewhere. This provides a light-weight, easy to manage node which can replicated numerous times and upon which the system does not heavily rely.
 
 When a __file server__ comes online it must make itself known the the various directory servers. In order to do this the file server requests its configuration from the Configuration Server. 
 The __file server__ then repeatedly makes calls to the directory server until it recevives a positive reponse, informing it that the directory server is aware of its presence.
@@ -66,6 +67,9 @@ The interaction with this functionality is discussed in more detail in the [Clie
  ## Directory Server
  The __directory server__ keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **directory server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
  
+ *List Files*
+   1. List all currently available files on the system.
+   
  *New Files*
     1. Check whether the requested filepath is available
     2. If the filepath is available, insert the new file and save it to the appropriate nodes (discussed in replication)
@@ -85,7 +89,11 @@ The interaction with this functionality is discussed in more detail in the [Clie
   ## Locking Server
  The system ensures that a client has exclusive access when writing a file by using a __locking server__ to maintain a database of currently locked files. This prevents write conflicts from happening. To ensure a file is not locked indefintely, there is also a timeout.
  
- Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatyedly working on the same files to lock these and ensure the they can only be edited by themselves. There is also a timeout function on this locking to prevent indefinite locking.
+ Aside from this there is a seperate locking functionality available. Clients can use this server to gain exclusive access to both files and directories outside of just a single write. This allows clients who are repeatedly working on the same files to lock these and ensure the they can only be edited by themselves.
+
+As an extended implementation I set up a FIFO queue within the __locking server__. 
+When a client requests a file that is already locked they are added to a FIFO queue by the locking server. Access to the resource will be released through this FIFO queue. There is timeout implemented in which the user next in the queue must make an access to the file before they loose their place. 
+
  
  Links to the source:
  
@@ -113,6 +121,7 @@ This implementation allows the client to be an extremely light-weight service an
  ## Client
 The functionality of the system can imported into projects through the provided Api package. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
 
+ * List Files
  * Reading Files
  * Creating Directories
  * Writing Files (Through the use of a text editor)
