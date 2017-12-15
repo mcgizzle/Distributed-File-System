@@ -35,7 +35,7 @@ readFile path = do
 
 listFiles :: AppT ()
 listFiles = do
-  res <- sendDirectory listFiles'
+  res <- sendDirectory listFiles' "There are no files!"
   liftIO $ do 
     putStrLn "FILES:"
     mapM_ (\ f -> do 
@@ -47,7 +47,7 @@ newFile name path = do
   contents <- liftIO $ runUserEditorDWIM plainTemplate "HERE IS UR NEW TEXT FILE\n"
   let file = File name path ( wrapStr contents)
   time <- liftIO getCurrentTime
-  res <- sendDirectory (newFile' file)
+  res <- sendDirectory (newFile' file) "Error saving new files."
   cacheFile file time
   liftIO $ putStrLn "File Saved!\n"
 
@@ -58,8 +58,9 @@ writeFile path = do
   contents <- liftIO $ runUserEditorDWIM plainTemplate (pack $ fileContents f)
   let file' = File (takeFileName path) (takeDirectory path) (wrapStr contents)
   time <- liftIO getCurrentTime
-  res' <- sendDirectory (writeFile' file')
+  res' <- sendDirectory (writeFile' file') "There was an error saving the file."
   unlockFile path
+  time <- liftIO getCurrentTime
   cacheFile f time
   liftIO $ putStrLn "Success writing to file!\n"
         
@@ -69,15 +70,12 @@ findFile path = do
   case cached of
     Just file -> return file
     Nothing -> do 
-      liftIO $ putStrLn "Before"
-      res <- sendDirectory (getFileLoc' (Just path))
-      liftIO $ putStrLn "After "
+      res <- sendDirectory (getFileLoc' (Just path)) "Error finding the files"
       let node = (fileNodeHost $ head res, fileNodePort $ head res)
       res <- liftIO $ Api.Query.query (getFile' (Just path)) node 
       case res of
         Left  _    -> throwError $ Error "Server Error: File not found."
         Right res' -> return res'
-
 
 
 cacheFile :: File -> UTCTime -> AppT ()
@@ -91,22 +89,16 @@ checkCache path = do
   res <- liftIO $ Cache.lookup c path
   case res of
     Just (file,time) -> do
-      res' <- sendDirectory1 (checkCache' (Just path) (Just time))
-      case res' of
-        Right _ -> return $ Just file
-        Left _  -> return Nothing
+      res' <- sendDirectory (checkCache' (Just path) (Just time)) "Error fetching file"
+      if res' == InDate then return $ Just file
+              else return Nothing
     Nothing -> return Nothing
 
-sendDirectory :: ClientM a -> AppT a
-sendDirectory q = do
+sendDirectory :: ClientM a -> String -> AppT a
+sendDirectory q err = do
   dirNode <- asks directoryNode
   res <- liftIO $ Api.Query.query q dirNode
   case res of
-    Left  _    -> throwError $ Error "Server Error"
+    Left  _    -> throwError $ Error err
     Right res' -> return res'
 
---sendDirectory1 :: ClientM a -> Either a
-sendDirectory1 q = do
-  dirNode <- asks directoryNode
-  res <- liftIO $ Api.Query.query q dirNode
-  return res

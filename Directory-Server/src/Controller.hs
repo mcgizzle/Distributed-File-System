@@ -13,6 +13,7 @@
 module Controller(
 listFiles,newFile,writeFile,getFileLoc,
 checkCache,newFileC,writeFileC,
+removeFile,
 initFileNode
 )where
 
@@ -25,7 +26,7 @@ import Servant
 import Data.Maybe (fromJust)
 import Data.Time
 
-import System.FilePath
+import System.FilePath hiding (splitPath)
 
 import Config
 import Database
@@ -34,7 +35,7 @@ import Api.Directory as M
 import Api.File
 import Api.Query
 
-import Control.Monad.Reader (MonadIO, MonadReader, asks, liftIO, lift)
+import Control.Monad.Reader 
 
 ---- File Nodes ------------------------
 initFileNode ::  MonadIO m => String -> Int -> MagicT m InitResponse
@@ -61,6 +62,12 @@ nodeFromKey key = do
 
 ----------------------------------------
 
+splitPath :: String -> (String,String)
+splitPath path' = (name,path)
+  where
+    name = takeFileName path'
+    path = takeDirectory path' ++ "/"
+---------------------------------------
 listFiles :: MonadIO m => MagicT m [FileInfo]
 listFiles = do
   res :: [Entity M.FileInfo] <- runDB $ selectList [] []
@@ -70,8 +77,7 @@ listFiles = do
   
 getFileLoc :: MonadIO m => Maybe FilePath -> MagicT m [FileNode]
 getFileLoc path' = do
-  let path = (takeDirectory $ fromJust path') ++ "/"
-  let name = takeFileName $ fromJust path'
+  let (name,path) = splitPath $ fromJust path'
   res <- runDB $ selectFirst [ M.FileInfoFile_path ==. path
                              , M.FileInfoFile_name ==. name ] []
   case res of
@@ -106,6 +112,24 @@ newFile f = do
   case res of
     Just _  -> return f'
     Nothing -> throwError errFileExists
+
+removeFile :: MonadIO m => Maybe FilePath -> MagicT m ()
+removeFile path' = do
+  let (name,path) = splitPath $ fromJust path'
+  res <- runDB $ do
+    f' <- selectFirst [ M.FileInfoFile_path ==. path, M.FileInfoFile_name ==. name ] []
+    case f' of
+      Nothing -> return Nothing
+      Just f  -> do
+        delete $ entityKey f
+        let nodeKeys = M.fileInfoNodes $ entityVal f
+        return $ Just nodeKeys
+  case res of
+    Just keys -> do
+        nodes <- mapM nodeFromKey keys
+        liftIO $ mapM_ (\n -> Api.Query.query (deleteFile' path') (M.fileNodeHost n,M.fileNodePort n)) nodes
+        return ()
+    Nothing   -> throwError err404  
 
 checkCache :: MonadIO m => Maybe String -> Maybe UTCTime -> MagicT m M.CacheResponse
 checkCache path' time' = do

@@ -44,11 +44,11 @@ directoryServer = Controller.listFiles
              :<|> Controller.newFile
              :<|> Controller.writeFile
              :<|> Controller.getFileLoc
+             :<|> Controller.removeFile
              :<|> Controller.checkCache
              :<|> Controller.initFileNode
              :<|> Controller.newFileC
              :<|> Controller.writeFileC
 api :: Proxy DirectoryAPI
 api = Proxy
-
 

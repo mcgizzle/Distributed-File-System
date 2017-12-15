@@ -48,7 +48,7 @@ api :: Proxy FileAPI
 api = Proxy
 
 server :: Server FileAPI
-server = getFile :<|> putFile :<|> updateFile
+server = getFile :<|> putFile :<|> updateFile :<|> deleteFile
 
 putFile :: File -> Handler ServerInfo
 putFile f@File{..} = do
@@ -81,6 +81,8 @@ updateFile f@File{..} = do
   liftIO $ writeFile (path ++ fileName) fileContents 
   return $ ServerInfo True
 
+deleteFile :: Maybe FilePath -> Handler ()
+deleteFile path = void  $ liftIO $ removeFile $ fromJust path
 
 errFileNotExists= err404 { errBody = "File does not exist." }
 errFileExists = err400 { errBody = "File with this name already exists"}

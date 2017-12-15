@@ -17,7 +17,6 @@
 
 module Api.Auth where
 
-
 import Servant
 import Data.Aeson           (FromJSON, ToJSON)
 import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
@@ -36,6 +35,5 @@ User json
     UniqueUser userName
     deriving Show Eq
 |]
-
 
 type AuthAPI = "test" :> TokenHeader' '["test-permission"] :> Get '[JSON] ()

@@ -41,7 +41,7 @@ instance ToJSON InitResponse
 instance FromJSON InitResponse
 
 data CacheResponse = InDate | OutDate 
-  deriving(Generic)
+  deriving(Eq,Generic)
 instance ToJSON CacheResponse
 instance FromJSON CacheResponse
 
@@ -77,6 +77,7 @@ type DirectoryAPI =
   :<|> "new"   :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo 
   :<|> "write" :> ReqBody '[JSON] File       :> Post '[JSON] FileInfo
   :<|> QueryParam "path" FilePath            :> Get '[JSON] [FileNode]  
+  :<|> QueryParam "path" FilePath            :> Delete '[JSON] ()  
   :<|> "cache" :> QueryParam "path" FilePath  
                :> QueryParam "time" UTCTime  :> Get '[JSON] CacheResponse
                -- File server init endpoint
@@ -94,12 +95,13 @@ listFiles' :: ClientM [FileInfo]
 newFile' :: File -> ClientM FileInfo
 writeFile' :: File -> ClientM FileInfo
 getFileLoc' :: Maybe String -> ClientM [FileNode]
+removeFile' :: Maybe String -> ClientM ()
 checkCache' :: Maybe String -> Maybe UTCTime -> ClientM CacheResponse
 initFileNode' :: String -> Int -> ClientM InitResponse
 -- Caching Version 2 endpoints
 newFile'' :: String -> Int -> File -> ClientM FileInfo
 writeFile'' :: String -> Int -> File -> ClientM FileInfo
 ( listFiles' :<|> newFile' :<|> writeFile' :<|> getFileLoc' :<|> 
-  checkCache' :<|> initFileNode' :<|> 
+  removeFile' :<|> checkCache' :<|> initFileNode' :<|> 
   newFile'' :<|> writeFile'' ) = client directoryApi
 

@@ -40,9 +40,11 @@ fileApi = Proxy
 type FileAPI = QueryParam "path" String :> Get '[JSON] File 
           :<|> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
           :<|> "write" :> ReqBody '[JSON] File :> Post '[JSON] ServerInfo
+          :<|> QueryParam "path" String :> Delete '[JSON] ()
 
 getFile' :: Maybe String -> ClientM File
 sendFile' :: File -> ClientM ServerInfo
 updateFile' :: File -> ClientM ServerInfo
-getFile' :<|> sendFile' :<|> updateFile' = client fileApi
+deleteFile' :: Maybe FilePath -> ClientM ()
+getFile' :<|> sendFile' :<|> updateFile' :<|> deleteFile' = client fileApi
 
