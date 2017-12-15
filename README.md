@@ -68,16 +68,20 @@ The interaction with this functionality is discussed in more detail in the [Clie
  The __directory server__ keeps track of which files are are stored on which nodes. This allows a client to make a call for the listing of all available files. The **directory server** also keeps track of which file nodes are currently active. This ensures the server never sends a client the location of an unavailable node.
  
  *List Files*
-   1. List all currently available files on the system.
+ 
+    1. List all currently available files on the system.
    
  *New Files*
+ 
     1. Check whether the requested filepath is available
     2. If the filepath is available, insert the new file and save it to the appropriate nodes (discussed in replication)
  
  *Writing Files*
+ 
     1. Request an update to the appropriate file nodes
  
  *Reading Files*
+ 
     1. Send the files contents for read-only access.
   
  Links to the source:
@@ -102,18 +106,36 @@ When a client requests a file that is already locked they are added to a FIFO qu
  [Controller]()
  
  ## Replication
-In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication on files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. An implementation of the _Least Recently Used_ algorithm maintains a balance accross the system.
+In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication on files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. 
+
+
+An implementation of the _Least Recently Used_ algorithm maintains a balance accross the system. The directory server manages this by storing the information in a database and updating it with each write to the various file nodes.
 
 When a client requests a file they receive a list of available nodes which contain the file. This information is temporarily stored by the client. The client then makes a request to one of theses nodes, if the node is down or takes too long to reply, the client simply tries another of the nodes. 
  
  ## Caching
-In a distributed system caching is a difficult topic. This system takes the approach that clients will most likely be accessing the same, yet very large, files and therefore acts accordingly. The client is also designed to be light-weight, and thus has no endpoints of its own.
+In a distributed system caching is a difficult topic. 
+
+I chose to imlement two versions of caching, allowing the system administrator to make the choice that best fits their specific needs.
+
+__1. Client checks with server__
+
+This system takes the approach that clients will most likely be accessing the same, yet very large, files and therefore acts accordingly. The client is also designed to be light-weight, and thus has no endpoints of its own.
 
 After creating a new file or writing to an existing, the client saves the files contents to the cache along with a time of write. A _last-write_ field for every file is also maintained by the directory server. 
 
 Before a client requests a file from a file server checks its cache for the file. If the file is there, then the client simply asks the directory server whether its version is in date. The directory server responds appropriately.
 
 This implementation allows the client to be an extremely light-weight service and prevents the unnesecary transfer of unaltered files. 
+
+__2. Server informs the client__
+
+The system takes the viewpoint that the load will be heavy and many clients will simply be reading rather than writing files.
+
+In this approach to caching, the directory server maintains a list of clients who have cached files. When a write is made to a file, the server invalidates all of the clients caches.
+If a client is currently offline, then the server makes note, and notifies the client on startup.
+
+This version requires a more cumbersome client side application. However, it can reduce load to the system as no requests are made to the system to check whether the cache is valid.
   
 ## Authentication  
 
