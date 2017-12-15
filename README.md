@@ -50,6 +50,8 @@ Links to the source:
    * Write to Existing Files (exclusively)
    * Create Directories
    * Delete Files/Directories 
+
+For editing the files I have displayed how the functionality could easily expanded by opening the file in a simple text editor. When the client chooses to write to a file, it is opened up in a text editor and on save, the file is sent for update.
    
 This functionality is really a combination of all the other servers and thus will be explained further in each seperate section. Therefore I will mainly discuss the operation of the *file servers* here. 
  
