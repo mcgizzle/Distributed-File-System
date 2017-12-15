@@ -1,50 +1,56 @@
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE TypeFamilies               #-}
+module Config where
 
-module Config(
-MagicT(..),Magic,
-Config(..),Environment,
-getConfig
-)where
-
-import Control.Monad.Except        (ExceptT, MonadError)
 import Database.Persist
-import Database.Persist.Postgresql (ConnectionPool, ConnectionString,
-                                    createPostgresqlPool)
+import Database.Persist.Postgresql 
 import Servant                     (ServantErr)
 import System.Environment          (lookupEnv)
+import Control.Monad.Except
 
 import Servant.API.Auth.Token
+import Control.Monad.Base
+import Control.Monad.Catch (MonadCatch, MonadThrow)
+import Control.Monad.Except
+import Control.Monad.Logger
+import Control.Monad.Reader
+import Control.Monad.Trans.Control
+import Data.Monoid
+
+import Servant.Server.Auth.Token as Auth
+
+
+import Database.Persist.Sql
 import Servant.Server
-import Servant.Server.Auth.Token
+import Servant.Server.Auth.Token.Config
+import Servant.Server.Auth.Token.Model
+import Servant.Server.Auth.Token.Persistent
+import qualified Servant.Server.Auth.Token.Persistent.Schema as S
 
 -- Magic Monad Stuff -----------------------------------------------
 import Control.Monad.Logger (runNoLoggingT, runStdoutLoggingT)
 import Control.Monad.Reader (MonadReader, ReaderT, asks, runReaderT,MonadIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 
-newtype MagicT m a
+class Monad m => AuthMonad m where 
+  getAuthConfig :: m AuthConfig 
+  liftAuthAction :: ExceptT ServantErr IO a -> m a 
+
+
+
+newtype MagicT a
   = MagicT
   {
-    runTheMagic :: ReaderT Config (ExceptT ServantErr m) a
+    runTheMagic :: ReaderT Config (ExceptT ServantErr IO) a 
   }deriving( Functor, Applicative, Monad, MonadReader Config, 
              MonadError ServantErr, MonadIO)
-
-type Magic = MagicT IO
+instance AuthMonad MagicT where 
+  getAuthConfig = asks authConfig
+  liftAuthAction = MagicT. lift
+     
 
 data Config = Config {
   environment :: Environment,
   pool        :: ConnectionPool,
-  authConfig  :: String
+  authConfig  :: AuthConfig
 }
 
 data Environment = Development
@@ -53,29 +59,14 @@ data Environment = Development
                  deriving(Show,Eq,Read)
 -------------------------------------------------------------
 
--- | Lift servant monad to server monad
-liftHandler :: Handler a -> MagicT a
-liftHandler = MagicT . lift . lift
-
--- | Special monad for authorisation actions
-newtype AuthM a = AuthM { unAuthM :: PersistentBackendT IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError ServantErr, HasStorage, HasAuthConfig)
---
-runAuth :: AuthM a -> ServerM a
-runAuth m = do
-  cfg <- asks authConfig
-  pool <- asks pool
-  liftHandler $ ExceptT $ runPersistentBackendT cfg pool $ unAuthM m
-
-
 --- Environment Setup ---------------------------------------
 getConfig :: IO Config
 getConfig = do
   env <- getEnv
   p <- makePool env
   let auth = defaultAuthConfig
-  flip runSqlPool pool $ runMigration S.migrateAllAuth
-  runPersistentBackendT authConfig pool $ ensureAdmin 17 "root" "root" "root@localhost"
+  flip runSqlPool p $ runMigration Auth.migrateAll
+  runPersistentBackendT auth p $ ensureAdmin 17 "root" "root" "root@localhost"
   return Config {
             environment = env,
             pool = p,

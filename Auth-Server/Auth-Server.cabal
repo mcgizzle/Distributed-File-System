@@ -5,7 +5,7 @@ build-type:        Simple
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Config, Controller, Server, Database
+  exposed-modules:     Config, Controller, Server, Database, Api
 
   build-depends:       base >= 4.7 && < 5
                      , aeson
@@ -19,6 +19,14 @@ library
                      , persistent-template
                      , transformers
                      , monad-logger
+                     , servant
+                     , servant-client
+                     , servant-auth-token-api
+                     , servant-auth-token
+                     , servant-auth-token-persistent 
+                     , transformers-base
+                     , monad-control
+                     , exceptions
                      , time
   default-language:    Haskell2010
 

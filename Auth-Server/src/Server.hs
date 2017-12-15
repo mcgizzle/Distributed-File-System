@@ -24,13 +24,13 @@ import Network.Wai.Handler.Warp hiding (FileInfo)
 import Servant
 import Control.Category     ((<<<), (>>>))
 
+import Servant.API
 import Servant.API.Auth.Token
 import Servant.Server
-import Servant.Server.Auth.Token
 
 import Config
 import Controller
-
+import Api
 
 startApp :: Int -> Config -> IO ()
 startApp port cfg = run port (authApp cfg)
@@ -38,19 +38,19 @@ startApp port cfg = run port (authApp cfg)
 authApp :: Config -> Application
 authApp cfg = serve api (magicToServer cfg)
 
-magicToServer :: Config -> Server AuthAPI
-magicToServer cfg = enter (convertMagic cfg >>> NT Handler) AuthServer
+magicToServer :: Config -> Server Api.AuthAPI
+magicToServer cfg = enter (convertMagic cfg >>> NT Handler) authServer
 
 convertMagic cfg = runReaderTNat cfg <<< NT runTheMagic
 
-authServer :: MonadIO m => ServerT AuthAPI (MagicT m)
+--authServer :: MonadIO m => ServerT Api.AuthAPI (MagicT m)
 authServer = testEndpoint
 
-api :: Proxy AuthAPI
+api :: Proxy Api.AuthAPI
 api = Proxy
 
 
-testEndpoint :: MToken' '["test-permission"] -> MagicT ()
+testEndpoint :: MonadIO m => MToken' '["test-permission"] -> MagicT m ()
 testEndpoint token = do
   runAuth $ guardAuthToken token
   return ()

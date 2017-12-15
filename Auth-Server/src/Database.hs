@@ -12,7 +12,7 @@ import Database.Persist.Sql (SqlPersistT, runMigration, runSqlPool)
 import Database.Persist.TH  (mkMigrate, mkPersist, persistLowerCase,
                                        share, sqlSettings)
 import Config               
-import Api.Auth-Server
+import Api
 
 doMigrations :: SqlPersistT IO ()
 doMigrations = runMigration migrateAll
