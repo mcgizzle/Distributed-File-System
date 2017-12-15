@@ -1,7 +1,7 @@
 # Distributed-File-System
 
 ## Introduction
-This project involved building a *distributed file system* with a range of functionality. This was first Haskell project of such scale and I learned a lot along the way. I now feel far more equipped in the areas of distributed systems and functional programming. 
+This project involved building a *distributed file system* with a range of functionality. This was my first Haskell project of such scale and I learned a lot along the way. I now feel far more equipped in the areas of distributed systems and functional programming. 
 
 I chose to implement the following functionalities:
 
@@ -16,7 +16,7 @@ I chose to implement the following functionalities:
  
  Below I discuss in detail the inner workings of each part of the system. 
  
- Building & Running is discussed [here]()
+ Building & Running is discussed [here](#buildAndrun)
  
  ### System Overview
  In order for the system to be trully distributed, each server is its own self contained [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) project that can be built and run independently from the rest of the system.
@@ -181,7 +181,7 @@ The functionality of the system can imported into projects through the provided 
  
  </div>
  
-  ## Building & Running
+  ## Building & Running <a name="buildAndrun"></a>
   
   **Each server must be built**
   `stack build`
