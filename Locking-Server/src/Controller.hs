@@ -49,7 +49,7 @@ lockFile :: MonadIO m => Int -> Maybe FilePath -> MagicT m M.LockInfo
 lockFile id path' = do
   let path = fromJust path'
   gotLock <- isAvailable id path
-  liftIO $ putStrLn $ "Attempting to lock file -> " ++ show gotLock
+  liftIO $ putStrLn $ "Attempting to lock file:" ++ path
   if (not gotLock)  then do
     inQueue <- checkQueued path id
     if inQueue then throwError errUserInQueue
