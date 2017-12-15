@@ -17,23 +17,29 @@ I chose to implement the following functionalities:
  Below I discuss in detail the inner workings of each part of the system. 
  
  ### System Overview
- In order for the system to be trully distributed, each server is its own self contained [Haskell Stack]() project that can be built and run independently from the rest of the system.
+ In order for the system to be trully distributed, each server is its own self contained [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) project that can be built and run independently from the rest of the system.
  This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole.
  
-I have included a _distributed-file-system.hsfiles_ in the source. This file is a [stack template]() which generate the boiler plate for the server code that is used in each of the projects. This file allows for rapid and reliable development of further functionality.
+I have included a [_distributed-file-system.hsfiles_](https://github.com/McGizzle/Distributed-File-System/blob/master/servant.hsfiles) in the source. This file is a [stack template]() which generate the boiler plate for the server code that is used in each of the projects. This file allows for rapid and reliable development of further functionality.
 
 #### Api
-The project was built with [Servant](). This is a fantastic tool for building type-safe Api's and I cannot recommend it enough. I have refactored out the code for each of the servers _Api's_ into an [Api Package]() (which in itself is a Stack project). This allows the _Api_ to be imported as a package from a GitHub repository and ensure a common _Api_ accross all of the servers. The servers pull in the Api's from a certain commit, so therefore changes to the _Api_ can be made and tested without affecting the current running of the system. This allows the servers to easily interact with eachothers endpoints.
+The project was built with [Servant](https://haskell-servant.readthedocs.io/en/stable/). This is a fantastic tool for building type-safe Api's and I cannot recommend it enough. I have refactored out the code for each of the servers _Api's_ into an [Api Package](https://github.com/McGizzle/Distributed-File-System/tree/master/Api) (which in itself is a stack project). This allows the _Api_ (ie. the functionality of the system) to be imported as a package from a GitHub repository and ensure a common _Api_ accross all of the servers. The servers pull in the package from a certain commit, so therefore changes to the _Api_ can be made and tested without affecting the current running of the system. This allows the servers to easily interact with eachothers endpoints.
 
 Most importantly, the *Api* package provides simple Haskell interface for interacting with the system.
 
 #### Database
-I chose to use [PostgreSQL]() with [Persistent]() for my data store. These two tools used togther create a very simple and reliable way to manage and maintain databases. The migrations are taken care behind the scenes and PostgreSQL ensures that all my [ACID]() requirements were satisfied.
+I chose to use [PostgreSQL](https://www.postgresql.org/) with [Persistent](https://hackage.haskell.org/package/persistent) for my data store. These two tools used togther create a very simple and reliable way to manage and maintain databases. The migrations are taken care behind the scenes and PostgreSQL ensures that all my [ACID](https://en.wikipedia.org/wiki/ACID) requirements were satisfied.
 The use of these tools ensures that the system is persisted. When the system is shut-down and restarted the same information will remain available.
 
 #### Configuration
 As mentioned above, I also chose to create a _Configuration Server_ for managing the system as a whole. The location of this server is stored in the Api package and is thus known to each of the other servers. 
 The purpose of the _Configuration Server_ is manage the network and help maintain the distributed nature. Rather than each server being pre-loaded with an arbritary configuration, on start-up each of the servers make a call to the _Configuration Server_ which reponds with the relevant configuration.
+
+Links to the source:
+
+[Api and Models](https://github.com/McGizzle/Distributed-File-System/blob/master/Api/src/Api/Config.hs)
+ 
+[Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/Config-Server/src/Controller.hs)
 
 
  ## Distributed Transparent File Access
@@ -58,9 +64,9 @@ The __file server__ then repeatedly makes calls to the directory server until it
 
 Links to the source:
 
-[Api and Models]()
+[Api and Models](https://github.com/McGizzle/Distributed-File-System/blob/master/Api/src/Api/File.hs)
  
-[Controller]()
+[Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/File-Server/src/Server.hs)
 
 The interaction with this functionality is discussed in more detail in the [Client]() section below.
 
@@ -86,9 +92,9 @@ The interaction with this functionality is discussed in more detail in the [Clie
   
  Links to the source:
  
- [Api and Models]()
+ [Api and Models](https://github.com/McGizzle/Distributed-File-System/blob/master/Api/src/Api/Directory.hs)
  
- [Controller]()
+ [Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/Directory-Server/src/Controller.hs)
  
   ## Locking Server
  The system ensures that a client has exclusive access when writing a file by using a __locking server__ to maintain a database of currently locked files. This prevents write conflicts from happening. To ensure a file is not locked indefintely, there is also a timeout.
@@ -101,9 +107,9 @@ When a client requests a file that is already locked they are added to a FIFO qu
  
  Links to the source:
  
- [Api and Models]()
+ [Api and Models](https://github.com/McGizzle/Distributed-File-System/blob/master/Api/src/Api/Locking.hs)
  
- [Controller]()
+ [Controller](https://github.com/McGizzle/Distributed-File-System/blob/master/Locking-Server/src/Controller.hs)
  
  ## Replication
 In a _distributed system_ it is to be assumed there will be downtime for certain nodes. To prevent this from causing issues to file access, the system implements replication on files. All files are stored to multiple nodes and this information is managed by the directory server. Load balancing of the file servers is also managed. 
