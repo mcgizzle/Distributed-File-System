@@ -1,7 +1,8 @@
 # Distributed-File-System
 
 ## Introduction
-This project involved building a *distributed file system* with a range of functionality. 
+This project involved building a *distributed file system* with a range of functionality. This was first Haskell project of such scale and I learned a lot along the way. I now feel far more equipped in the areas of distributed systems and functional programming. 
+
 I chose to implement the following functionalities:
 
  * __Distributed Transparent File Access__
