@@ -16,6 +16,8 @@ I chose to implement the following functionalities:
  
  Below I discuss in detail the inner workings of each part of the system. 
  
+ Building & Running is discussed [here]()
+ 
  ### System Overview
  In order for the system to be trully distributed, each server is its own self contained [Haskell Stack](https://docs.haskellstack.org/en/stable/README/) project that can be built and run independently from the rest of the system.
  This prevents the system from having a single point of failure and is thus inherently distributed in nature. If any node fails for any reason, another can simply be spun into action, without affecting the system as a whole.
@@ -179,4 +181,22 @@ The functionality of the system can imported into projects through the provided 
  
  </div>
  
+  ## Building & Running
+  
+  **Each server must be built**
+  `stack build`
+  
+  **Run the servers**
+  
+  `stack exec <project name>-exe <port>`
+  
+  To run this locally, first fire up the servers in the following order:
+  
+  1. Configuration server
+  2. Directory & Locking Servers
+  3. File Servers
+  
+  and finally the client
+  
+  `stack exec Client`
   
