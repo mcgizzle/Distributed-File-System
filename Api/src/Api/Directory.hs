@@ -67,8 +67,6 @@ FileCache json
 |]
 
 
-
-
 directoryApi :: Proxy DirectoryAPI
 directoryApi = Proxy
 

@@ -33,11 +33,15 @@ console = loop
        ["read",path]     -> Directory.readFile path
        ["new",name,path] -> Directory.newFile name path
        ["write",path]    -> Directory.writeFile path
+       ["delete",path]   -> Directory.deleteFile path
        ["lock",path]     -> Locking.lockFile path
        ["unlock",path]   -> Locking.unlockFile path
-       _                 -> liftIO $ putStrLn $ "Wrong command u fool, r u thick or summin?" 
+       _                 -> liftIO $ putStrLn $ "Help Meee!" 
                                             ++ "\nCOMMANDS:\n" 
                                             ++ "---> ls \n" 
                                             ++ "---> new <file name> <file path>\n"
                                             ++ "---> write <file name> <file path>\n"
+                                            ++ "---> delete <path>\n"
+                                            ++ "---> lock <path>\n"
+                                            ++ "---> unlock <path>\n"
      loop 

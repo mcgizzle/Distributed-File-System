@@ -63,6 +63,9 @@ writeFile path = do
   time <- liftIO getCurrentTime
   cacheFile f time
   liftIO $ putStrLn "Success writing to file!\n"
+
+deleteFile :: FilePath -> AppT ()
+deleteFile path = void $ sendDirectory (removeFile' $ Just path) "Error: Deleting the file"
         
 findFile :: String -> AppT File
 findFile path = do
