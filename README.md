@@ -159,7 +159,9 @@ This version requires a more cumbersome client side application. However, it can
   
  ## Client
 The functionality of the system can imported into projects through the provided Api package. An example of this package in action is found in the __Client__. This package displays all of the systems functionality.
- 
+  
+  
+ <div>
  
   Operation | Command 
   ---|--- 
@@ -172,11 +174,9 @@ The functionality of the system can imported into projects through the provided 
   Unlock File | `unlock <file path>`
   Caching     | Done behind the scenes
  
- * Reading Files
- * Creating Directories
- * Writing Files (Through the use of a text editor)
- * Deletion
- * Locking Files/Directories
- * Caching
+  
+  <img style="float: right;" src="https://github.com/McGizzle/Distributed-File-System/blob/master/Client/img/console.png">
+ 
+ </div>
  
   
